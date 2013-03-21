@@ -75,7 +75,7 @@ public class EmailQueriesTest
 
         ExecutionResult result = queries.suspectBehaviour3();
 
-        Iterator<Object> objectIterator = result.columnAs( "COUNT(f)" );
+        Iterator<Object> objectIterator = result.columnAs( "count(f)" );
         assertEquals( 2L, objectIterator.next() );
 
         assertFalse( objectIterator.hasNext() );

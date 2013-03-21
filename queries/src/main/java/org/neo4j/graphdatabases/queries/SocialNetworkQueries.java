@@ -39,11 +39,11 @@ public class SocialNetworkQueries
     {
         String query =
                 "START  subject=node:user(name={name})\n" +
-                        "MATCH  subject-[:WORKS_FOR]->company<-[:WORKS_FOR]-person,\n" +
-                        "       subject-[:INTERESTED_IN]->interest<-[:INTERESTED_IN]-person\n" +
+                        "MATCH  (subject)-[:WORKS_FOR]->(company)<-[:WORKS_FOR]-(person),\n" +
+                        "       (subject)-[:INTERESTED_IN]->(interest)<-[:INTERESTED_IN]-(person)\n" +
                         "RETURN person.name AS name,\n" +
-                        "       COUNT(interest) AS score,\n" +
-                        "       COLLECT(interest.name) AS interests\n" +
+                        "       count(interest) AS score,\n" +
+                        "       collect(interest.name) AS interests\n" +
                         "ORDER BY score DESC";
 
         Map<String, Object> params = new HashMap<String, Object>();
@@ -56,12 +56,12 @@ public class SocialNetworkQueries
     {
         String query =
                 "START  subject=node:user(name={name})\n" +
-                        "MATCH  subject-[:INTERESTED_IN]->interest<-[:INTERESTED_IN]-person,\n" +
-                        "       person-[:WORKS_FOR]->company\n" +
+                        "MATCH  (subject)-[:INTERESTED_IN]->(interest)<-[:INTERESTED_IN]-(person),\n" +
+                        "       (person)-[:WORKS_FOR]->(company)\n" +
                         "RETURN person.name AS name,\n" +
                         "       company.name AS company,\n" +
-                        "       COUNT(interest) AS score,\n" +
-                        "       COLLECT(interest.name) AS interests\n" +
+                        "       count(interest) AS score,\n" +
+                        "       collect(interest.name) AS interests\n" +
                         "ORDER BY score DESC";
 
         Map<String, Object> params = new HashMap<String, Object>();
@@ -74,10 +74,10 @@ public class SocialNetworkQueries
     public ExecutionResult sharedInterestsAlsoInterestedInTopic( String userName, String topicLabel )
     {
         String query = "START person=node:user(name={name})\n" +
-                "MATCH person-[:INTERESTED_IN]->()<-[:INTERESTED_IN]-colleague-[:INTERESTED_IN]->topic\n" +
+                "MATCH (person)-[:INTERESTED_IN]->()<-[:INTERESTED_IN]-(colleague)-[:INTERESTED_IN]->(topic)\n" +
                 "WHERE topic.name={topic}\n" +
                 "WITH  colleague\n" +
-                "MATCH colleague-[:INTERESTED_IN]->allTopics\n" +
+                "MATCH (colleague)-[:INTERESTED_IN]->(allTopics)\n" +
                 "RETURN colleague.name AS name, collect(distinct(allTopics.name)) AS topics";
 
 
@@ -93,11 +93,11 @@ public class SocialNetworkQueries
     {
         String query =
                 "START subject=node:user(name={name})\n" +
-                        "MATCH p=subject-[:WORKED_ON]->()-[:WORKED_ON*0..2]-()\n" +
-                        "        <-[:WORKED_ON]-person-[:INTERESTED_IN]->interest\n" +
+                        "MATCH p=(subject)-[:WORKED_ON]->()-[:WORKED_ON*0..2]-()\n" +
+                        "        <-[:WORKED_ON]-(person)-[:INTERESTED_IN]->(interest)\n" +
                         "WHERE person<>subject AND interest.name={topic}\n" +
                         "WITH DISTINCT person.name AS name,\n" +
-                        "     MIN(LENGTH(p)) as pathLength\n" +
+                        "     min(length(p)) as pathLength\n" +
                         "ORDER BY pathLength ASC\n" +
                         "LIMIT {resultLimit}\n" +
                         "RETURN name, pathLength";
@@ -190,13 +190,13 @@ public class SocialNetworkQueries
     {
         String query =
                 "START subject=node:user(name={name})\n" +
-                        "MATCH p=subject-[:WORKED_ON]->()-[:WORKED_ON*0..2]-()\n" +
-                        "        <-[:WORKED_ON]-person-[:INTERESTED_IN]->interest\n" +
+                        "MATCH p=(subject)-[:WORKED_ON]->()-[:WORKED_ON*0..2]-()\n" +
+                        "        <-[:WORKED_ON]-(person)-[:INTERESTED_IN]->(interest)\n" +
                         "WHERE person<>subject AND interest.name IN {interests}\n" +
-                        "WITH person, interest, MIN(LENGTH(p)) as pathLength\n" +
+                        "WITH person, interest, min(length(p)) as pathLength\n" +
                         "RETURN person.name AS name,\n" +
-                        "       COUNT(interest) AS score,\n" +
-                        "       COLLECT(interest.name) AS interests,\n" +
+                        "       count(interest) AS score,\n" +
+                        "       collect(interest.name) AS interests,\n" +
                         "       ((pathLength - 1)/2) AS distance\n" +
                         "ORDER BY score DESC\n" +
                         "LIMIT {resultLimit}";
@@ -212,12 +212,12 @@ public class SocialNetworkQueries
     public ExecutionResult friendWorkedWithFriendWithInterests( String userName, int limit, String... interestLabels )
     {
         String query = "START subject=node:user(name={name})\n" +
-                "MATCH p=subject-[:WORKED_WITH*0..1]-()-[:WORKED_WITH]-person-[:INTERESTED_IN]->interest\n" +
+                "MATCH p=(subject)-[:WORKED_WITH*0..1]-()-[:WORKED_WITH]-(person)-[:INTERESTED_IN]->(interest)\n" +
                 "WHERE person<>subject AND interest.name IN {interests}\n" +
-                "WITH person, interest, MIN(LENGTH(p)) as pathLength\n" +
+                "WITH person, interest, min(length(p)) as pathLength\n" +
                 "RETURN person.name AS name,\n" +
-                "       COUNT(interest) AS score,\n" +
-                "       COLLECT(interest.name) AS interests,\n" +
+                "       count(interest) AS score,\n" +
+                "       collect(interest.name) AS interests,\n" +
                 "       (pathLength - 1) AS distance\n" +
                 "ORDER BY score DESC\n" +
                 "LIMIT {resultLimit}";
@@ -251,8 +251,8 @@ public class SocialNetworkQueries
     {
 
         String query = "START subject = node:user(name={name})\n" +
-                "MATCH subject-[:WORKED_ON]->()<-[:WORKED_ON]-person\n" +
-                "WHERE NOT(subject-[:WORKED_WITH]-person)\n" +
+                "MATCH (subject)-[:WORKED_ON]->()<-[:WORKED_ON]-(person)\n" +
+                "WHERE NOT((subject)-[:WORKED_WITH]-(person))\n" +
                 "WITH DISTINCT subject, person\n" +
                 "CREATE UNIQUE subject-[:WORKED_WITH]-person\n" +
                 "RETURN subject.name AS startName, person.name AS endName";

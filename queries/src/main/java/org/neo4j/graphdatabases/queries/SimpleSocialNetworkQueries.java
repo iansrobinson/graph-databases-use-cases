@@ -33,7 +33,7 @@ public class SimpleSocialNetworkQueries
     public ExecutionResult friendOfAFriendToDepth4(String name)
     {
         String query = "START person=node:user(name={name})\n" +
-            "MATCH person-[:FRIEND]-()-[:FRIEND]-()-[:FRIEND]-()-[:FRIEND]-friend\n" +
+            "MATCH (person)-[:FRIEND]-()-[:FRIEND]-()-[:FRIEND]-()-[:FRIEND]-(friend)\n" +
             "RETURN friend.name AS name";
 
         Map<String, Object> params = new HashMap<String, Object>();

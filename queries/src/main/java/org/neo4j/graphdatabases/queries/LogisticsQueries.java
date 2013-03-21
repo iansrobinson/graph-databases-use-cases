@@ -40,25 +40,25 @@ public class LogisticsQueries
         String query =
                 "START s=node:location(name={startLocation}),\n" +
                 "      e=node:location(name={endLocation})\n" +
-                "MATCH p1 = s<-[:DELIVERY_ROUTE*1..2]-db1\n" +
-                "WHERE ALL(r in relationships(p1)\n" +
+                "MATCH upLeg = (s)<-[:DELIVERY_ROUTE*1..2]-(db1)\n" +
+                "WHERE all(r in relationships(upLeg)\n" +
                 "          WHERE r.start_date <= {intervalStart}\n" +
                 "          AND r.end_date >= {intervalEnd})\n" +
-                "WITH  e, p1, db1\n" +
-                "MATCH p2 = db2-[:DELIVERY_ROUTE*1..2]->e\n" +
-                "WHERE ALL(r in relationships(p2)\n" +
+                "WITH  e, upLeg, db1\n" +
+                "MATCH downLeg = (db2)-[:DELIVERY_ROUTE*1..2]->(e)\n" +
+                "WHERE all(r in relationships(downLeg)\n" +
                 "          WHERE r.start_date <= {intervalStart}\n" +
                 "          AND r.end_date >= {intervalEnd})\n" +
-                "WITH  db1, db2, p1, p2\n" +
-                "MATCH p3 = db1<-[:CONNECTED_TO]-()-[:CONNECTED_TO*1..3]-db2\n" +
-                "WHERE ALL(r in relationships(p3)\n" +
+                "WITH  db1, db2, upLeg, downLeg\n" +
+                "MATCH topRoute = (db1)<-[:CONNECTED_TO]-()-[:CONNECTED_TO*1..3]-(db2)\n" +
+                "WHERE all(r in relationships(topRoute)\n" +
                 "          WHERE r.start_date <= {intervalStart}\n" +
                 "          AND r.end_date >= {intervalEnd})\n" +
-                "WITH  p1, p2, p3,\n" +
-                "      REDUCE(weight=0, r in relationships(p3) : weight+r.cost) AS score\n" +
+                "WITH  upLeg, downLeg, topRoute,\n" +
+                "      reduce(weight=0, r in relationships(topRoute) : weight+r.cost) AS score\n" +
                 "      ORDER BY score ASC\n" +
                 "      LIMIT 1\n" +
-                "RETURN (nodes(p1) + tail(nodes(p3)) + tail(nodes(p2))) AS n";
+                "RETURN (nodes(upLeg) + tail(nodes(topRoute)) + tail(nodes(downLeg))) AS n";
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "startLocation", start );

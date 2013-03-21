@@ -34,7 +34,7 @@ public class EmailQueries
     {
         String query = "START email = node:email(id = '6')\n" +
                 "MATCH p=(email)<-[:REPLY_TO*1..4]-()<-[:SENT]-(replier)\n" +
-                "RETURN replier.username AS replier, LENGTH(p) - 1 AS depth ORDER BY depth";
+                "RETURN replier.username AS replier, length(p) - 1 AS depth ORDER BY depth";
 
         Map<String, Object> params = new HashMap<String, Object>();
 
@@ -45,7 +45,7 @@ public class EmailQueries
     {
         String query = "START email = node:email(id = '11')\n" +
                 "MATCH (email)<-[f:FORWARD_OF*]-() \n" +
-                "RETURN COUNT(f)";
+                "RETURN count(f)";
 
         Map<String, Object> params = new HashMap<String, Object>();
 

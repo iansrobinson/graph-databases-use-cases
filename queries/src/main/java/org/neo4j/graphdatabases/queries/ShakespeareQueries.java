@@ -87,7 +87,7 @@ public class ShakespeareQueries
                                "MATCH (bard)-[w:WROTE_PLAY]->(play)\n" +
                                "WITH play \n" +
                                "ORDER BY w.year DESC \n" +
-                               "RETURN COLLECT(play.title) AS plays";
+                               "RETURN collect(play.title) AS plays";
 
                Map<String, Object> params = new HashMap<String, Object>();
 
