@@ -3,8 +3,6 @@ package org.neo4j.graphdatabases.queries.traversals;
 import static org.neo4j.graphdb.DynamicRelationshipType.withName;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,17 +31,17 @@ import org.neo4j.kernel.Traversal;
 
 public class ParcelRouteCalculator
 {
-    private static final PathExpander<Interval> DELIVERY_ROUTE_EXPANDER = new ValidPathExpander(
+    private static final PathExpander<Interval> DELIVERY_ROUTE_EXPANDER = new IntervalPathExpander(
             withName( "DELIVERY_ROUTE" ),
             Direction.INCOMING
     );
 
-    private static final PathExpander<Interval> CONNECTED_TO_EXPANDER = new ValidPathExpander(
+    private static final PathExpander<Interval> CONNECTED_TO_EXPANDER = new IntervalPathExpander(
             withName( "CONNECTED_TO" ),
             Direction.BOTH
     );
 
-    private static final TraversalDescription TRAVERSAL = Traversal.description()
+    private static final TraversalDescription DELIVERY_BASE_FINDER = Traversal.description()
             .depthFirst()
             .evaluator( new Evaluator()
             {
@@ -52,12 +50,17 @@ public class ParcelRouteCalculator
                 @Override
                 public Evaluation evaluate( Path path )
                 {
-                    if ( !path.endNode().hasRelationship( DELIVERY_ROUTE, Direction.INCOMING )  )
+                    if ( isDeliveryBase( path ) )
                     {
                         return Evaluation.INCLUDE_AND_PRUNE;
                     }
 
-                    return Evaluation.INCLUDE_AND_CONTINUE;
+                    return Evaluation.EXCLUDE_AND_CONTINUE;
+                }
+
+                private boolean isDeliveryBase( Path path )
+                {
+                    return !path.endNode().hasRelationship( DELIVERY_ROUTE, Direction.INCOMING );
                 }
             } );
 
@@ -74,11 +77,12 @@ public class ParcelRouteCalculator
     {
         TraversalDescription deliveryBaseFinder = createDeliveryBaseFinder( interval );
 
-        Collection<Node> upLeg = findRouteToDeliveryBase( start, deliveryBaseFinder );
-        Collection<Node> downLeg = findRouteToDeliveryBase( end, deliveryBaseFinder );
-        Collection<Node> topRoute = findRouteBetweenDeliveryBases(
-                IteratorUtil.last( upLeg ),
-                IteratorUtil.last( downLeg ),
+        Path upLeg = findRouteToDeliveryBase( start, deliveryBaseFinder );
+        Path downLeg = findRouteToDeliveryBase( end, deliveryBaseFinder );
+
+        Path topRoute = findRouteBetweenDeliveryBases(
+                upLeg.endNode(),
+                downLeg.endNode(),
                 interval );
 
         return combineRoutes( upLeg, downLeg, topRoute );
@@ -86,44 +90,41 @@ public class ParcelRouteCalculator
 
     private TraversalDescription createDeliveryBaseFinder( Interval interval )
     {
-        return TRAVERSAL.expand( DELIVERY_ROUTE_EXPANDER,
+        return DELIVERY_BASE_FINDER.expand( DELIVERY_ROUTE_EXPANDER,
                 new InitialBranchState.State<Interval>( interval, interval ) );
     }
 
-    private Set<Node> combineRoutes( Collection<Node> upNodes, Collection<Node> downNodes, Collection<Node> topNodes )
+    private Set<Node> combineRoutes( Path upLeg, Path downLeg, Path topRoute )
     {
-        Set<Node> results = new LinkedHashSet<Node>();
-        results.addAll( upNodes );
-        results.addAll( topNodes );
-        List<Node> downNodesList = new ArrayList<Node>( downNodes );
-        Collections.reverse( downNodesList );
-        results.addAll( downNodesList );
+        LinkedHashSet<Node> results = new LinkedHashSet<Node>();
+        results.addAll( IteratorUtil.asCollection( upLeg.nodes() ));
+        results.addAll( IteratorUtil.asCollection( topRoute.nodes() ));
+        results.addAll( IteratorUtil.asCollection( downLeg.reverseNodes() ));
         return results;
     }
 
-    private Collection<Node> findRouteBetweenDeliveryBases( Node deliveryBase1, Node deliveryBase2, Interval interval )
+    private Path findRouteBetweenDeliveryBases( Node deliveryBase1, Node deliveryBase2, Interval interval )
     {
         PathFinder<WeightedPath> routeBetweenDeliveryBasesFinder = GraphAlgoFactory.dijkstra(
                 CONNECTED_TO_EXPANDER,
                 new InitialBranchState.State<Interval>( interval, interval ),
                 COST_EVALUATOR );
-        return IteratorUtil.asCollection(
-                routeBetweenDeliveryBasesFinder.findSinglePath( deliveryBase1, deliveryBase2 ).nodes() );
+        return routeBetweenDeliveryBasesFinder.findSinglePath( deliveryBase1, deliveryBase2 );
     }
 
-    private Collection<Node> findRouteToDeliveryBase( String startPosition, TraversalDescription deliveryBaseFinder )
+    private Path findRouteToDeliveryBase( String startPosition, TraversalDescription deliveryBaseFinder )
     {
         Node startNode = locationIndex.get( "name", startPosition ).getSingle();
-        return IteratorUtil.asCollection( deliveryBaseFinder.traverse( startNode ).nodes() );
+        return deliveryBaseFinder.traverse( startNode ).iterator().next();
     }
 
-    private static class ValidPathExpander implements PathExpander<Interval>
+    private static class IntervalPathExpander implements PathExpander<Interval>
     {
 
         private final RelationshipType relationshipType;
         private final Direction direction;
 
-        private ValidPathExpander( RelationshipType relationshipType, Direction direction )
+        private IntervalPathExpander( RelationshipType relationshipType, Direction direction )
         {
             this.relationshipType = relationshipType;
             this.direction = direction;
