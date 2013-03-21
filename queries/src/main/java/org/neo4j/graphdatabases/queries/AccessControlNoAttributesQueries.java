@@ -18,8 +18,9 @@ public class AccessControlNoAttributesQueries
     public ExecutionResult findAccessibleResources( String administratorName )
     {
         String query = "START admin=node:administrator(name={administratorName})\n" +
-                "MATCH paths=(admin)-[:MEMBER_OF]->()-[:ALLOWED_INHERIT]->()<-[:CHILD_OF*0..3]-(company)\n" +
-                "      <-[:WORKS_FOR]-(employee)-[:HAS_ACCOUNT]->(account)\n" +
+                "MATCH paths=(admin)-[:MEMBER_OF]->()-[:ALLOWED_INHERIT]->()\n" +
+                "            <-[:CHILD_OF*0..3]-(company)<-[:WORKS_FOR]-(employee)\n" +
+                "            -[:HAS_ACCOUNT]->(account)\n" +
                 "WHERE NOT ((admin)-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-(company))\n" +
                 "RETURN employee.name AS employee, account.name AS account\n" +
                 "UNION\n" +
@@ -138,8 +139,10 @@ public class AccessControlNoAttributesQueries
         String query =
                 "START admin=node:administrator(name={adminName}),\n" +
                         "      company=node:company(resourceName={resourceName})\n" +
-                        "MATCH p=(admin)-[:MEMBER_OF]->()-[:ALLOWED_INHERIT]->()<-[:CHILD_OF*0..3]-(company)\n" +
-                        "WHERE NOT ((admin)-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-(company))\n" +
+                        "MATCH p=(admin)-[:MEMBER_OF]->()-[:ALLOWED_INHERIT]->()\n" +
+                        "        <-[:CHILD_OF*0..3]-(company)\n" +
+                        "WHERE NOT ((admin)-[:MEMBER_OF]->()-[:DENIED]->()\n" +
+                        "           <-[:CHILD_OF*0..3]-(company))\n" +
                         "RETURN count(p) AS accessCount\n" +
                         "UNION\n" +
                         "START admin=node:administrator(name={adminName}),\n" +

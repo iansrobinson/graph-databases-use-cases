@@ -212,7 +212,8 @@ public class SocialNetworkQueries
     public ExecutionResult friendWorkedWithFriendWithInterests( String userName, int limit, String... interestLabels )
     {
         String query = "START subject=node:user(name={name})\n" +
-                "MATCH p=(subject)-[:WORKED_WITH*0..1]-()-[:WORKED_WITH]-(person)-[:INTERESTED_IN]->(interest)\n" +
+                "MATCH p=(subject)-[:WORKED_WITH*0..1]-()-[:WORKED_WITH]-(person)\n" +
+                "        -[:INTERESTED_IN]->(interest)\n" +
                 "WHERE person<>subject AND interest.name IN {interests}\n" +
                 "WITH person, interest, min(length(p)) as pathLength\n" +
                 "RETURN person.name AS name,\n" +
@@ -254,7 +255,7 @@ public class SocialNetworkQueries
                 "MATCH (subject)-[:WORKED_ON]->()<-[:WORKED_ON]-(person)\n" +
                 "WHERE NOT((subject)-[:WORKED_WITH]-(person))\n" +
                 "WITH DISTINCT subject, person\n" +
-                "CREATE UNIQUE subject-[:WORKED_WITH]-person\n" +
+                "CREATE UNIQUE (subject)-[:WORKED_WITH]-(person)\n" +
                 "RETURN subject.name AS startName, person.name AS endName";
 
 
