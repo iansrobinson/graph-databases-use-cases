@@ -15,6 +15,7 @@ public class SevenDays
     private final DateTime start;
     private final Random random;
 
+    @SuppressWarnings( "unchecked" )
     private static final List<List<Integer>> days = asList(
             asList( 1, 1, 5 ),
             asList( 1, 2, 4 ),

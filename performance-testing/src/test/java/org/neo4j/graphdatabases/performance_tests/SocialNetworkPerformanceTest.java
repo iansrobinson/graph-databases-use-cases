@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
+import org.neo4j.graphdatabases.AccessControlNoAttributes;
 import org.neo4j.graphdatabases.SocialNetwork;
 import org.neo4j.graphdatabases.performance_tests.testing.DefaultExecutionEngineWrapper;
 import org.neo4j.graphdatabases.performance_tests.testing.MultipleTestRuns;
@@ -33,6 +34,7 @@ import org.neo4j.graphdatabases.queries.SocialNetworkQueries;
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 @Ignore
@@ -59,8 +61,10 @@ public class SocialNetworkPerformanceTest
 
         try
         {
-
-            db = new EmbeddedGraphDatabase( SocialNetwork.STORE_DIR, params );
+            db = new GraphDatabaseFactory()
+                                .newEmbeddedDatabaseBuilder( SocialNetwork.STORE_DIR )
+                                .setConfig( params )
+                                .newGraphDatabase();
         }
         catch ( Exception e )
         {

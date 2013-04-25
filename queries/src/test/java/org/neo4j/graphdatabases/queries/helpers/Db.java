@@ -3,15 +3,17 @@ package org.neo4j.graphdatabases.queries.helpers;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdatabases.queries.testing.IndexParam;
 import org.neo4j.graphdatabases.queries.testing.IndexParams;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.NotFoundException;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.test.AsciiDocGenerator;
-import org.neo4j.test.ImpermanentGraphDatabase;
+import org.neo4j.test.TestGraphDatabaseFactory;
 import org.neo4j.visualization.asciidoc.AsciidocHelper;
 
 public final class Db
@@ -22,12 +24,15 @@ public final class Db
 
     public static GraphDatabaseService impermanentDb()
     {
-        return new ImpermanentGraphDatabase();
+        Map<String, String> params = new HashMap<String, String>();
+        params.put( "online_backup_enabled", "false" );
+
+        return new TestGraphDatabaseFactory().newImpermanentDatabaseBuilder().setConfig( params ).newGraphDatabase();
     }
 
     public static GraphDatabaseService tempDb()
     {
-        return new EmbeddedGraphDatabase( createTempDatabaseDir().getAbsolutePath() );
+        return new GraphDatabaseFactory().newEmbeddedDatabase( createTempDatabaseDir().getAbsolutePath() );
     }
 
     public static GraphDatabaseService createFromCypher( String name, String cypher, IndexParam... indexParams )

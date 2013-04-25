@@ -23,7 +23,7 @@ import org.neo4j.graphdatabases.queries.AccessControlNoAttributesQueries;
 import org.neo4j.graphdatabases.queries.helpers.DbUtils;
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 @Ignore
 public class AccessControlNoAttributesPerformanceTest
@@ -50,7 +50,10 @@ public class AccessControlNoAttributesPerformanceTest
             params.put( "cache_type", "gcr" );
             params.put( "allow_store_upgrade", "true" );
 
-            db = new EmbeddedGraphDatabase( AccessControlNoAttributes.STORE_DIR, params );
+            db = new GraphDatabaseFactory()
+                    .newEmbeddedDatabaseBuilder( AccessControlNoAttributes.STORE_DIR )
+                    .setConfig( params )
+                    .newGraphDatabase();
             queries = new AccessControlNoAttributesQueries( new DefaultExecutionEngineWrapper( db ) );
             multipleTestRuns = new MultipleTestRuns( NUMBER_OF_TEST_RUNS, writer );
 

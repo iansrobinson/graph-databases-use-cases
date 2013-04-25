@@ -301,26 +301,26 @@ public class LogisticsQueriesTest
     private static GraphDatabaseService createDatabase()
     {
         String cypher = "CREATE\n" +
-                "pc1 = {name:'parcel-centre-1', _label:'parcel-centre'},\n" +
-                "pc2 = {name:'parcel-centre-2', _label:'parcel-centre'},\n" +
+                "(pc1 {name:'parcel-centre-1', _label:'parcel-centre'}),\n" +
+                "(pc2 {name:'parcel-centre-2', _label:'parcel-centre'}),\n" +
 
-                "db1 = {name:'delivery-base-1', _label:'delivery-base'},\n" +
-                "db2 = {name:'delivery-base-2', _label:'delivery-base'},\n" +
-                "db3 = {name:'delivery-base-3', _label:'delivery-base'},\n" +
+                "(db1 {name:'delivery-base-1', _label:'delivery-base'}),\n" +
+                "(db2 {name:'delivery-base-2', _label:'delivery-base'}),\n" +
+                "(db3 {name:'delivery-base-3', _label:'delivery-base'}),\n" +
 
-                "da1 = {name:'delivery-area-1', _label:'delivery-area'},\n" +
-                "da2 = {name:'delivery-area-2', _label:'delivery-area'},\n" +
-                "da3 = {name:'delivery-area-3', _label:'delivery-area'},\n" +
-                "da4 = {name:'delivery-area-4', _label:'delivery-area'},\n" +
+                "(da1 {name:'delivery-area-1', _label:'delivery-area'}),\n" +
+                "(da2 {name:'delivery-area-2', _label:'delivery-area'}),\n" +
+                "(da3 {name:'delivery-area-3', _label:'delivery-area'}),\n" +
+                "(da4 {name:'delivery-area-4', _label:'delivery-area'}),\n" +
 
-                "ds1 = {name:'delivery-segment-1', _label:'delivery-segment'},\n" +
-                "ds2 = {name:'delivery-segment-2', _label:'delivery-segment'},\n" +
-                "ds3 = {name:'delivery-segment-3', _label:'delivery-segment'},\n" +
-                "ds4 = {name:'delivery-segment-4', _label:'delivery-segment'},\n" +
-                "ds5 = {name:'delivery-segment-5', _label:'delivery-segment'},\n" +
-                "ds6 = {name:'delivery-segment-6', _label:'delivery-segment'},\n" +
-                "ds7 = {name:'delivery-segment-7', _label:'delivery-segment'},\n" +
-                "ds8 = {name:'delivery-segment-8', _label:'delivery-segment'},\n" +
+                "(ds1 {name:'delivery-segment-1', _label:'delivery-segment'}),\n" +
+                "(ds2 {name:'delivery-segment-2', _label:'delivery-segment'}),\n" +
+                "(ds3 {name:'delivery-segment-3', _label:'delivery-segment'}),\n" +
+                "(ds4 {name:'delivery-segment-4', _label:'delivery-segment'}),\n" +
+                "(ds5 {name:'delivery-segment-5', _label:'delivery-segment'}),\n" +
+                "(ds6 {name:'delivery-segment-6', _label:'delivery-segment'}),\n" +
+                "(ds7 {name:'delivery-segment-7', _label:'delivery-segment'}),\n" +
+                "(ds8 {name:'delivery-segment-8', _label:'delivery-segment'}),\n" +
 
                 "pc1-[:CONNECTED_TO {cost:3, " + intervalProperties( interval1 ) + "}]->db1,\n" +
                 "pc1-[:CONNECTED_TO {cost:3, " + intervalProperties( interval1 ) + "}]->db2,\n" +

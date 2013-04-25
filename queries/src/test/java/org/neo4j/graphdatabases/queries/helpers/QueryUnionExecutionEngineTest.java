@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
@@ -269,31 +268,31 @@ public class QueryUnionExecutionEngineTest
 
         // then
         String resultsString = results.toString();
-        System.out.println(resultsString);
+        System.out.println( resultsString );
         assertTrue( resultsString.startsWith(
                 "+---------------------------------+\n" +
                         "| person                          |\n" +
                         "+---------------------------------+\n" +
-                        "| Node[2]{name:\"b\",_label:\"user\"} |\n" +
-                        "| Node[3]{name:\"c\",_label:\"user\"} |\n" +
+                        "| Node[2]{_label:\"user\",name:\"b\"} |\n" +
+                        "| Node[3]{_label:\"user\",name:\"c\"} |\n" +
                         "+---------------------------------+\n" ) );
         assertTrue( resultsString.contains(
                 "+---------------------------------+\n" +
                         "| person                          |\n" +
                         "+---------------------------------+\n" +
-                        "| Node[4]{name:\"d\",_label:\"user\"} |\n" +
-                        "| Node[5]{name:\"e\",_label:\"user\"} |\n" +
+                        "| Node[4]{_label:\"user\",name:\"d\"} |\n" +
+                        "| Node[5]{_label:\"user\",name:\"e\"} |\n" +
                         "+---------------------------------+\n" ) );
     }
 
     private static GraphDatabaseService createDatabase()
     {
         String cypher = "CREATE\n" +
-                "a = {name:'a', _label:'user'},\n" +
-                "b = {name:'b', _label:'user'},\n" +
-                "c = {name:'c', _label:'user'},\n" +
-                "d = {name:'d', _label:'user'},\n" +
-                "e = {name:'e', _label:'user'},\n" +
+                "(a {name:'a', _label:'user'}),\n" +
+                "(b {name:'b', _label:'user'}),\n" +
+                "(c {name:'c', _label:'user'}),\n" +
+                "(d {name:'d', _label:'user'}),\n" +
+                "(e {name:'e', _label:'user'}),\n" +
                 "a-[:FRIEND]->b, a-[:FRIEND]->c, a-[:ENEMY]->d, a-[:ENEMY]->e";
 
         return createFromCypher(

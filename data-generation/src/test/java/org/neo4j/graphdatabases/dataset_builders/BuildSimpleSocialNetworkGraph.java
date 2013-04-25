@@ -13,7 +13,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdatabases.SimpleSocialNetwork;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.neode.Dataset;
 import org.neo4j.neode.DatasetManager;
@@ -38,7 +38,10 @@ public class BuildSimpleSocialNetworkGraph
         params.put( "dump_configuration", "true" );
         params.put( "cache_type", "gcr" );
 
-        GraphDatabaseService db = new EmbeddedGraphDatabase( SimpleSocialNetwork.STORE_DIR, params );
+        GraphDatabaseService db = new GraphDatabaseFactory()
+                            .newEmbeddedDatabaseBuilder( SimpleSocialNetwork.STORE_DIR )
+                            .setConfig( params )
+                            .newGraphDatabase();
         createSampleDataset( db );
 
         GraphStatistics.create( db, SimpleSocialNetwork.TITLE )

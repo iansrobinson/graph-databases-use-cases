@@ -12,6 +12,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdatabases.AccessControl;
+import org.neo4j.graphdatabases.AccessControlNoAttributes;
 import org.neo4j.graphdatabases.performance_tests.testing.DefaultExecutionEngineWrapper;
 import org.neo4j.graphdatabases.performance_tests.testing.MultipleTestRuns;
 import org.neo4j.graphdatabases.performance_tests.testing.ParamsGenerator;
@@ -23,6 +24,7 @@ import org.neo4j.graphdatabases.queries.helpers.QueryUnionExecutionResult;
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 @Ignore
@@ -47,7 +49,11 @@ public class AccessControlPerformanceTest
         params.put( "dump_configuration", "true" );
         params.put( "cache_type", "gcr" );
 
-        db = new EmbeddedGraphDatabase( AccessControl.STORE_DIR, params );
+        db = new GraphDatabaseFactory()
+                            .newEmbeddedDatabaseBuilder( AccessControl.STORE_DIR )
+                            .setConfig( params )
+                            .newGraphDatabase();
+
         queries = new AccessControlQueries( new DefaultExecutionEngineWrapper( db ) );
         multipleTestRuns = new MultipleTestRuns( NUMBER_OF_TEST_RUNS, writer );
 

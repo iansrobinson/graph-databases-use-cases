@@ -20,7 +20,7 @@ import org.neo4j.graphdatabases.Logistics;
 import org.neo4j.graphdatabases.dataset_builders.helpers.SevenDays;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.PropertyContainer;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.neode.Dataset;
 import org.neo4j.neode.DatasetManager;
@@ -45,7 +45,10 @@ public class BuildLogisticsGraph
         params.put( "dump_configuration", "true" );
         params.put( "cache_type", "gcr" );
 
-        GraphDatabaseService db = new EmbeddedGraphDatabase( Logistics.STORE_DIR, params );
+        GraphDatabaseService db = new GraphDatabaseFactory()
+                            .newEmbeddedDatabaseBuilder( Logistics.STORE_DIR )
+                            .setConfig( params )
+                            .newGraphDatabase();
         DatasetManager dsm = new DatasetManager( db, SysOutLog.INSTANCE );
 
         NodeSpecification parcelCentreSpec = dsm.nodeSpecification( "parcel-centre",

@@ -26,14 +26,14 @@ public class IndexNodeByOtherNodeIndexerTest
     public void shouldIndexNodesByOtherNodes() throws Exception
     {
         // given
-        String cypher = "CREATE a = {name:'a', _label:'parent'}, \n" +
-                "b = {name:'b', _label:'child'}, \n" +
-                "c = {name:'c', _label:'child'}, \n" +
-                "d = {name:'d', _label:'parent'}, \n" +
-                "e = {name:'e', _label:'child'}, \n" +
-                "f = {name:'f', _label:'child'},\n" +
-                "g = {name:'g', _label:'child'},\n" +
-                "h = {name:'h', _label:'child'},\n" +
+        String cypher = "CREATE (a {name:'a', _label:'parent'}), \n" +
+                "(b {name:'b', _label:'child'}), \n" +
+                "(c {name:'c', _label:'child'}), \n" +
+                "(d {name:'d', _label:'parent'}), \n" +
+                "(e {name:'e', _label:'child'}), \n" +
+                "(f {name:'f', _label:'child'}),\n" +
+                "(g {name:'g', _label:'child'}),\n" +
+                "(h {name:'h', _label:'child'}),\n" +
                 "a-[:CONNECTED_TO]->b,\n" +
                 "a-[:CONNECTED_TO]->c,\n" +
                 "a-[:CONNECTED_TO]->g,\n" +

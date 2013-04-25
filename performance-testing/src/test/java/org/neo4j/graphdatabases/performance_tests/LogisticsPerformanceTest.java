@@ -26,7 +26,7 @@ import org.neo4j.graphdatabases.performance_tests.testing.SysOutWriter;
 import org.neo4j.graphdatabases.queries.LogisticsQueries;
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 @Ignore
 public class LogisticsPerformanceTest
@@ -49,8 +49,10 @@ public class LogisticsPerformanceTest
 
         try
         {
-
-            db = new EmbeddedGraphDatabase( Logistics.STORE_DIR, params );
+            db = new GraphDatabaseFactory()
+                                .newEmbeddedDatabaseBuilder( Logistics.STORE_DIR )
+                                .setConfig( params )
+                                .newGraphDatabase();
         }
         catch ( Exception e )
         {

@@ -19,7 +19,7 @@ import org.neo4j.graphdatabases.queries.traversals.IndexResources;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.PropertyContainer;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.kernel.impl.util.FileUtils;
 import org.neo4j.neode.Dataset;
 import org.neo4j.neode.DatasetManager;
@@ -52,7 +52,10 @@ public class BuildAccessControlGraph
         params.put( "dump_configuration", "true" );
         params.put( "cache_type", "gcr" );
 
-        GraphDatabaseService db = new EmbeddedGraphDatabase( AccessControl.STORE_DIR, params );
+        GraphDatabaseService db = new GraphDatabaseFactory()
+                            .newEmbeddedDatabaseBuilder( AccessControl.STORE_DIR )
+                            .setConfig( params )
+                            .newGraphDatabase();
         DatasetManager dsm = new DatasetManager( db, SysOutLog.INSTANCE );
 
         NodeSpecification adminSpec = dsm.nodeSpecification( "administrator", indexableProperty( "name" ) );

@@ -1,0 +1,3 @@
+[submodule "neode"]
+	path = neode
+	url = https://github.com/iansrobinson/neode.git

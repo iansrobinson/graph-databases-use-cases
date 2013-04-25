@@ -102,41 +102,41 @@ public class ShakespeareQueriesTest
 
     private static GraphDatabaseService createDatabase()
     {
-        String cypher = "CREATE shakespeare = { firstname: 'William', lastname: 'Shakespeare', _label: 'author' },\n" +
-                "       juliusCaesar = { title: 'Julius Caesar', _label: 'play' },\n" +
+        String cypher = "CREATE (shakespeare { firstname: 'William', lastname: 'Shakespeare', _label: 'author' }),\n" +
+                "       (juliusCaesar { title: 'Julius Caesar', _label: 'play' }),\n" +
                 "       (shakespeare)-[:WROTE_PLAY { year: 1599 }]->(juliusCaesar),\n" +
-                "       theTempest = { title: 'The Tempest', _label: 'play' },\n" +
+                "       (theTempest { title: 'The Tempest', _label: 'play' }),\n" +
                 "       (shakespeare)-[:WROTE_PLAY { year: 1610}]->(theTempest),\n" +
-                "       rsc = { name: 'RSC', _label: 'company' },\n" +
-                "       production1 = { name: 'Julius Caesar', _label: 'production' },\n" +
+                "       (rsc { name: 'RSC', _label: 'company' }),\n" +
+                "       (production1 { name: 'Julius Caesar', _label: 'production' }),\n" +
                 "       (rsc)-[:PRODUCED]->(production1),\n" +
                 "       (production1)-[:PRODUCTION_OF]->(juliusCaesar),\n" +
-                "       performance1 = { date: 20120729, _label: 'performance' },\n" +
+                "       (performance1 { date: 20120729, _label: 'performance' }),\n" +
                 "       (performance1)-[:PERFORMANCE_OF]->(production1),\n" +
-                "       production2 = { name: 'The Tempest', _label: 'production' },\n" +
+                "       (production2 { name: 'The Tempest', _label: 'production' }),\n" +
                 "       (rsc)-[:PRODUCED]->(production2),\n" +
                 "       (production2)-[:PRODUCTION_OF]->(theTempest),\n" +
-                "       performance2 = { date: 20061121, _label: 'performance' },\n" +
+                "       (performance2 { date: 20061121, _label: 'performance' }),\n" +
                 "       (performance2)-[:PERFORMANCE_OF]->(production2),\n" +
-                "       performance3 = { date: 20120730, _label: 'performance' },\n" +
+                "       (performance3 { date: 20120730, _label: 'performance' }),\n" +
                 "       (performance3)-[:PERFORMANCE_OF]->(production1),\n" +
-                "       billy = { name: 'Billy', _label: 'user' },\n" +
-                "       review = { rating: 5, review: 'This was awesome!', _label: 'review' },\n" +
+                "       (billy { name: 'Billy', _label: 'user' }),\n" +
+                "       (review { rating: 5, review: 'This was awesome!', _label: 'review' }),\n" +
                 "       (billy)-[:WROTE_REVIEW]->(review),\n" +
                 "       (review)-[:RATED]->(performance1),\n" +
-                "       theatreRoyal = { name: 'Theatre Royal', _label: 'venue' },\n" +
+                "       (theatreRoyal { name: 'Theatre Royal', _label: 'venue' }),\n" +
                 "       (performance1)-[:VENUE]->(theatreRoyal),\n" +
                 "       (performance2)-[:VENUE]->(theatreRoyal),\n" +
                 "       (performance3)-[:VENUE]->(theatreRoyal),\n" +
-                "       greyStreet = { name: 'Grey Street', _label: 'street' },\n" +
+                "       (greyStreet { name: 'Grey Street', _label: 'street' }),\n" +
                 "       (theatreRoyal)-[:STREET]->(greyStreet),\n" +
-                "       newcastle = { name: 'Newcastle', _label: 'city' },\n" +
+                "       (newcastle { name: 'Newcastle', _label: 'city' }),\n" +
                 "       (greyStreet)-[:CITY]->(newcastle),\n" +
-                "       tyneAndWear = { name: 'Tyne and Wear', _label: 'county' },\n" +
+                "       (tyneAndWear { name: 'Tyne and Wear', _label: 'county' }),\n" +
                 "       (newcastle)-[:COUNTY]->(tyneAndWear),\n" +
-                "       england = { name: 'England', _label: 'country' },\n" +
+                "       (england { name: 'England', _label: 'country' }),\n" +
                 "       (tyneAndWear)-[:COUNTRY]->(england),\n" +
-                "       stratford = { name: 'Stratford upon Avon', _label: 'city' },\n" +
+                "       (stratford { name: 'Stratford upon Avon', _label: 'city' }),\n" +
                 "       (stratford)-[:COUNTRY]->(england),\n" +
                 "       (rsc)-[:BASED_IN]->(stratford),\n" +
                 "       (shakespeare)-[:BORN_IN]->stratford";

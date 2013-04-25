@@ -24,8 +24,8 @@ import org.neo4j.graphdatabases.dataset_builders.traversers.FindAllColleagues;
 import org.neo4j.graphdatabases.dataset_builders.traversers.IsCompanyProject;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.traversal.TraversalDescription;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.Traversal;
 import org.neo4j.kernel.Uniqueness;
 import org.neo4j.kernel.impl.util.FileUtils;
@@ -53,7 +53,10 @@ public class BuildSocialNetworkGraph
         params.put( "dump_configuration", "true" );
         params.put( "cache_type", "gcr" );
 
-        GraphDatabaseService db = new EmbeddedGraphDatabase( SocialNetwork.STORE_DIR, params );
+        GraphDatabaseService db = new GraphDatabaseFactory()
+                            .newEmbeddedDatabaseBuilder( SocialNetwork.STORE_DIR )
+                            .setConfig( params )
+                            .newGraphDatabase();
         DatasetManager dsm = new DatasetManager( db, SysOutLog.INSTANCE );
 
         TraversalDescription findCompanyProjects = createFindCompanyProjectsTraversalDescription();
