@@ -1,4 +1,4 @@
-graph-databases-use-cases
+Graph Databases Use Cases
 =========================
 
-Example use cases from the O'Reilly Graph Databases book
+Example use case implementations from the O'Reilly book, [Graph Databases](http://graphdatabases.com/) by [@iansrobinson](http://twitter.com/iansrobinson), [@jimwebber](http://twitter.com/jimwebber) and [@emileifrem](http://twitter.com/emileifrem).
