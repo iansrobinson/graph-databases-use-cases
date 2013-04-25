@@ -273,15 +273,15 @@ public class QueryUnionExecutionEngineTest
                 "+---------------------------------+\n" +
                         "| person                          |\n" +
                         "+---------------------------------+\n" +
-                        "| Node[2]{_label:\"user\",name:\"b\"} |\n" +
+                        "| Node[4]{_label:\"user\",name:\"b\"} |\n" +
                         "| Node[3]{_label:\"user\",name:\"c\"} |\n" +
                         "+---------------------------------+\n" ) );
         assertTrue( resultsString.contains(
                 "+---------------------------------+\n" +
                         "| person                          |\n" +
                         "+---------------------------------+\n" +
-                        "| Node[4]{_label:\"user\",name:\"d\"} |\n" +
-                        "| Node[5]{_label:\"user\",name:\"e\"} |\n" +
+                        "| Node[2]{_label:\"user\",name:\"d\"} |\n" +
+                        "| Node[1]{_label:\"user\",name:\"e\"} |\n" +
                         "+---------------------------------+\n" ) );
     }
 

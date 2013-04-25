@@ -11,7 +11,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.cypher.javacompat.ExecutionResult;
-import org.neo4j.graphdatabases.AccessControlNoAttributes;
 import org.neo4j.graphdatabases.SimpleSocialNetwork;
 import org.neo4j.graphdatabases.performance_tests.testing.MultipleTestRuns;
 import org.neo4j.graphdatabases.performance_tests.testing.ParamsGenerator;
@@ -23,7 +22,6 @@ import org.neo4j.graphdatabases.queries.traversals.FriendOfAFriendDepth4;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 @Ignore
 public class SimpleSocialNetworkPerformanceTest
