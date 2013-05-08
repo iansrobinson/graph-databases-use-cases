@@ -255,10 +255,10 @@ public class QueryUnionExecutionEngineTest
         // given
         String query1 = "START a = node:user(name='a')\n" +
                 "MATCH a-[:FRIEND]->person\n" +
-                "RETURN person";
+                "RETURN person.name";
         String query2 = "START a = node:user(name='a')\n" +
                 "MATCH a-[:ENEMY]->person\n" +
-                "RETURN person";
+                "RETURN person.name";
         QueryUnionExecutionEngine queryUnionExecutionEngine = new QueryUnionExecutionEngine( executionEngine );
 
         // when
@@ -270,19 +270,21 @@ public class QueryUnionExecutionEngineTest
         String resultsString = results.toString();
         System.out.println( resultsString );
         assertTrue( resultsString.startsWith(
-                "+---------------------------------+\n" +
-                        "| person                          |\n" +
-                        "+---------------------------------+\n" +
-                        "| Node[4]{_label:\"user\",name:\"b\"} |\n" +
-                        "| Node[3]{_label:\"user\",name:\"c\"} |\n" +
-                        "+---------------------------------+\n" ) );
+                "+-------------+\n" +
+                        "| person.name |\n" +
+                        "+-------------+\n" +
+                        "| \"b\"         |\n" +
+                        "| \"c\"         |\n" +
+                        "+-------------+\n" +
+                        "2 rows\n" ) );
         assertTrue( resultsString.contains(
-                "+---------------------------------+\n" +
-                        "| person                          |\n" +
-                        "+---------------------------------+\n" +
-                        "| Node[2]{_label:\"user\",name:\"d\"} |\n" +
-                        "| Node[1]{_label:\"user\",name:\"e\"} |\n" +
-                        "+---------------------------------+\n" ) );
+                "+-------------+\n" +
+                        "| person.name |\n" +
+                        "+-------------+\n" +
+                        "| \"d\"         |\n" +
+                        "| \"e\"         |\n" +
+                        "+-------------+\n" +
+                        "2 rows\n" ) );
     }
 
     private static GraphDatabaseService createDatabase()
