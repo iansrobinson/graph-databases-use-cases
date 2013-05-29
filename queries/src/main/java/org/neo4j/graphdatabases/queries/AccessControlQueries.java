@@ -3,167 +3,157 @@ package org.neo4j.graphdatabases.queries;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdatabases.queries.helpers.ExecutionEngineWrapper;
-import org.neo4j.graphdatabases.queries.helpers.QueryUnionExecutionEngine;
-import org.neo4j.graphdatabases.queries.helpers.QueryUnionExecutionResult;
 
 public class AccessControlQueries
 {
-    private final QueryUnionExecutionEngine executionEngine;
+    private final ExecutionEngineWrapper executionEngine;
 
-    public AccessControlQueries( ExecutionEngineWrapper executionEngine )
+    public AccessControlQueries( ExecutionEngineWrapper executionEngineWrapper )
     {
-        this.executionEngine = new QueryUnionExecutionEngine( executionEngine );
+        this.executionEngine = executionEngineWrapper;
     }
 
-    public QueryUnionExecutionResult findAccessibleResources( String administratorName )
+    public ExecutionResult findAccessibleResources( String administratorName )
     {
-        String inheritedQuery = "START admin=node:administrator(name={administratorName})\n" +
-                "MATCH paths=admin-[:MEMBER_OF]->()-[permission:ALLOWED]->()<-[:CHILD_OF*0..3]-()" +
-                "<-[:WORKS_FOR]-employee-[:HAS_ACCOUNT]->account\n" +
-                "WHERE (permission.inherit=true) AND NOT (admin-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-()" +
-                "<-[:WORKS_FOR]-employee-[:HAS_ACCOUNT]->account)\n" +
-                "RETURN paths";
-        String notInheritedQuery = "START admin=node:administrator(name={administratorName})\n" +
-                "MATCH paths=admin-[:MEMBER_OF]->()-[permission:ALLOWED]->()" +
-                "<-[:WORKS_FOR]-employee-[:HAS_ACCOUNT]->account\n" +
-                "WHERE (permission.inherit=false)\n" +
-                "RETURN paths";
+        String query = "START admin=node:administrator(name={administratorName})\n" +
+                "MATCH paths=(admin)-[:MEMBER_OF]->()-[:ALLOWED_INHERIT]->()\n" +
+                "            <-[:CHILD_OF*0..3]-(company)<-[:WORKS_FOR]-(employee)\n" +
+                "            -[:HAS_ACCOUNT]->(account)\n" +
+                "WHERE NOT ((admin)-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-(company))\n" +
+                "RETURN employee.name AS employee, account.name AS account\n" +
+                "UNION\n" +
+                "START admin=node:administrator(name={administratorName})\n" +
+                "MATCH paths=(admin)-[:MEMBER_OF]->()-[:ALLOWED_DO_NOT_INHERIT]->()\n" +
+                "      <-[:WORKS_FOR]-(employee)-[:HAS_ACCOUNT]->(account)\n" +
+                "RETURN employee.name AS employee, account.name AS account";
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "administratorName", administratorName );
 
-        return executionEngine.execute( params, inheritedQuery, notInheritedQuery );
-
+        return executionEngine.execute( query, params );
     }
 
-    public QueryUnionExecutionResult findAccessibleCompanies( String administratorName )
+    public ExecutionResult findAccessibleCompanies( String administratorName )
     {
-        String inheritedQuery = "START admin=node:administrator(name={administratorName})\n" +
-                "MATCH admin-[:MEMBER_OF]->()-[permission:ALLOWED]->()<-[:CHILD_OF*0..3]-company\n" +
-                "WHERE (permission.inherit=true) AND NOT (admin-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0." +
-                ".3]-company)\n" +
-                "RETURN company";
-
-        String notInheritedQuery = "START admin=node:administrator(name={administratorName})\n" +
-                "MATCH admin-[:MEMBER_OF]->()-[permission:ALLOWED]->(company)\n" +
-                "WHERE (permission.inherit=false)\n" +
-                "RETURN company";
+        String query = "START admin=node:administrator(name={administratorName})\n" +
+                "MATCH (admin)-[:MEMBER_OF]->()-[:ALLOWED_INHERIT]->()<-[:CHILD_OF*0..3]-(company)\n" +
+                "WHERE NOT ((admin)-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-(company))\n" +
+                "RETURN company.name AS company\n" +
+                "UNION\n" +
+                "START admin=node:administrator(name={administratorName})\n" +
+                "MATCH (admin)-[:MEMBER_OF]->()-[:ALLOWED_DO_NOT_INHERIT]->(company)\n" +
+                "RETURN company.name AS company";
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "administratorName", administratorName );
 
-        return executionEngine.execute( params, inheritedQuery, notInheritedQuery );
+        return executionEngine.execute( query, params );
     }
 
-    public QueryUnionExecutionResult findAccessibleAccountsForCompany( String administratorName,
-                                                                           String companyName )
+    public ExecutionResult findAccessibleAccountsForCompany( String administratorName, String companyName )
     {
-        String inheritedQuery = "START admin=node:administrator(name={administratorName}),\n" +
-                "                      company=node:company(name={companyName})\n" +
-                "MATCH admin-[:MEMBER_OF]->group-[permission:ALLOWED]->company<-[:CHILD_OF*0." +
-                ".3]-subcompany<-[:WORKS_FOR]-employee-[:HAS_ACCOUNT]->account\n" +
-                "WHERE (permission.inherit=true) AND NOT (admin-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0." +
-                ".3]-subcompany)\n" +
-                "RETURN account";
-
-        String notInheritedQuery = "START admin=node:administrator(name={administratorName}),\n" +
-                "                         company=node:company(name={companyName})\n" +
-                "MATCH admin-[:MEMBER_OF]->group-[permission:ALLOWED]->company<-[:WORKS_FOR]-employee-[:HAS_ACCOUNT" +
-                "]->account\n" +
-                "WHERE (permission.inherit=false)\n" +
-                "RETURN account";
+        String query =
+                "START admin=node:administrator(name={administratorName}),\n" +
+                        "      company=node:company(name={companyName})\n" +
+                        "MATCH (admin)-[:MEMBER_OF]->(group)-[:ALLOWED_INHERIT]->(company)\n" +
+                        "      <-[:CHILD_OF*0..3]-(subcompany)<-[:WORKS_FOR]-(employee)-[:HAS_ACCOUNT]->(account)\n" +
+                        "WHERE NOT ((admin)-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-(subcompany))\n" +
+                        "RETURN account.name AS account\n" +
+                        "UNION\n" +
+                        "START admin=node:administrator(name={administratorName}),\n" +
+                        "      company=node:company(name={companyName})\n" +
+                        "MATCH (admin)-[:MEMBER_OF]->(group)-[:ALLOWED_DO_NOT_INHERIT]->(company)\n" +
+                        "      <-[:WORKS_FOR]-(employee)-[:HAS_ACCOUNT]->(account)\n" +
+                        "RETURN account.name AS account";
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "administratorName", administratorName );
         params.put( "companyName", companyName );
 
-        return executionEngine.execute( params, inheritedQuery, notInheritedQuery );
+        return executionEngine.execute( query, params );
     }
 
-    public QueryUnionExecutionResult findAdminForResource( String resourceName )
+    public ExecutionResult findAdminForResource( String resourceName )
     {
-        String inheritedQuery = "START resource=node:resource(name={resourceName})\n" +
-                        "MATCH p=resource-[:WORKS_FOR|HAS_ACCOUNT*1..2]-company-[:CHILD_OF*0..3]->()<-[permission:ALLOWED]-()" +
-                        "<-[:MEMBER_OF]-admin\n" +
-                        "WHERE (permission.inherit=true) AND NOT (admin-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-company)\n" +
-                        "RETURN DISTINCT admin, p";
+        String query = "START resource=node:resource(name={resourceName})\n" +
+                       "MATCH p=(resource)-[:WORKS_FOR|HAS_ACCOUNT*1..2]-(company)\n" +
+                       "        -[:CHILD_OF*0..3]->()<-[:ALLOWED_INHERIT]-()<-[:MEMBER_OF]-(admin)\n" +
+                       "WHERE NOT ((admin)-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-(company))\n" +
+                       "RETURN admin.name AS admin\n" +
+                       "UNION\n" +
+                       "START resource=node:resource(name={resourceName})\n" +
+                       "MATCH p=(resource)-[:WORKS_FOR|HAS_ACCOUNT*1..2]-(company)\n" +
+                       "        <-[:ALLOWED_DO_NOT_INHERIT]-()<-[:MEMBER_OF]-(admin)\n" +
+                       "RETURN admin.name AS admin";
 
-                String notInheritedQuery = "START resource=node:resource(name={resourceName})\n" +
-                        "MATCH p=resource-[:WORKS_FOR|HAS_ACCOUNT*1..2]-company<-[permission:ALLOWED]-()" +
-                        "<-[:MEMBER_OF]-admin\n" +
-                        "WHERE (permission.inherit=false)\n" +
-                        "RETURN DISTINCT admin, p";
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put( "resourceName", resourceName );
 
-                Map<String, Object> params = new HashMap<String, Object>();
-                params.put( "resourceName", resourceName );
-
-                return executionEngine.execute( params, inheritedQuery, notInheritedQuery );
+        return executionEngine.execute( query, params );
     }
 
-    public QueryUnionExecutionResult findAdminForCompany( String companyName )
+    public ExecutionResult findAdminForCompany( String companyName )
     {
-        String inheritedQuery = "START company=node:company(name={companyName})\n" +
-                        "MATCH p=company-[:CHILD_OF*0..3]->()<-[permission:ALLOWED]-()<-[:MEMBER_OF]-admin\n" +
-                        "WHERE (permission.inherit=true) AND NOT (admin-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-company)\n" +
-                        "RETURN DISTINCT admin, p";
+        String query = "START company=node:company(name={companyName})\n" +
+                "MATCH (company)-[:CHILD_OF*0..3]->()<-[:ALLOWED_INHERIT]-()<-[:MEMBER_OF]-(admin)\n" +
+                "WHERE NOT ((admin)-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-(company))\n" +
+                "RETURN admin.name AS admin\n" +
+                "UNION\n" +
+                "START company=node:company(name={companyName})\n" +
+                "MATCH (company)<-[:ALLOWED_DO_NOT_INHERIT]-()<-[:MEMBER_OF]-(admin)\n" +
+                "RETURN admin.name AS admin";
 
-                String notInheritedQuery = "START company=node:company(name={companyName})\n" +
-                        "MATCH p=company<-[permission:ALLOWED]-()<-[:MEMBER_OF]-admin\n" +
-                        "WHERE (permission.inherit=false)\n" +
-                        "RETURN DISTINCT admin, p";
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put( "companyName", companyName );
 
-                Map<String, Object> params = new HashMap<String, Object>();
-                params.put( "companyName", companyName );
-
-                return executionEngine.execute( params, inheritedQuery, notInheritedQuery );
+        return executionEngine.execute( query, params );
     }
 
-    public QueryUnionExecutionResult hasAccessToResource( String adminName, String resourceName )
+    public ExecutionResult hasAccessToResource( String adminName, String resourceName )
     {
-        String inheritedQuery =
+        String query =
+                "START admin=node:administrator(name={adminName}),\n" +
+                        "      resource=node:resource(name={resourceName})\n" +
+                        "MATCH p=(admin)-[:MEMBER_OF]->()-[:ALLOWED_INHERIT]->()<-[:CHILD_OF*0." +
+                        ".3]-(company)-[:WORKS_FOR|HAS_ACCOUNT*1..2]-(resource)\n" +
+                        "WHERE NOT ((admin)-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-(company))\n" +
+                        "RETURN count(p) AS accessCount\n" +
+                        "UNION\n" +
                         "START admin=node:administrator(name={adminName}),\n" +
-                                "      resource=node:resource(name={resourceName})\n" +
-                                "MATCH p=admin-[:MEMBER_OF]->()-[permission:ALLOWED]->()<-[:CHILD_OF*0." +
-                                ".3]-company-[:WORKS_FOR|HAS_ACCOUNT*1..2]-resource\n" +
-                                "WHERE (permission.inherit=true) AND NOT (admin-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-company)\n" +
-                                "RETURN COUNT(p) AS accessCount";
+                        "      resource=node:resource(name={resourceName})\n" +
+                        "MATCH p=(admin)-[:MEMBER_OF]->()-[:ALLOWED_DO_NOT_INHERIT]->(company)-[:WORKS_FOR|HAS_ACCOUNT*1..2]-(resource)\n" +
+                        "RETURN count(p) AS accessCount";
 
-                String notInheritedQuery =
-                        "START admin=node:administrator(name={adminName}),\n" +
-                                "      resource=node:resource(name={resourceName})\n" +
-                                "MATCH p=admin-[:MEMBER_OF]->()-[permission:ALLOWED]->company-[:WORKS_FOR|HAS_ACCOUNT*1." +
-                                ".2]-resource\n" +
-                                "WHERE (permission.inherit=false)\n" +
-                                "RETURN COUNT(p) AS accessCount";
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put( "adminName", adminName );
+        params.put( "resourceName", resourceName );
 
-                Map<String, Object> params = new HashMap<String, Object>();
-                params.put( "adminName", adminName );
-                params.put( "resourceName", resourceName );
-
-                return executionEngine.execute( params, inheritedQuery, notInheritedQuery );
+        return executionEngine.execute( query, params );
     }
 
-    public QueryUnionExecutionResult hasAccessToIndexedResource( String adminName, String resourceName )
+
+    public ExecutionResult hasAccessToIndexedResource( String adminName, String resourceName )
     {
-        String inheritedQuery =
+        String query =
+                "START admin=node:administrator(name={adminName}),\n" +
+                        "      company=node:company(resourceName={resourceName})\n" +
+                        "MATCH p=(admin)-[:MEMBER_OF]->()-[:ALLOWED_INHERIT]->()\n" +
+                        "        <-[:CHILD_OF*0..3]-(company)\n" +
+                        "WHERE NOT ((admin)-[:MEMBER_OF]->()-[:DENIED]->()\n" +
+                        "           <-[:CHILD_OF*0..3]-(company))\n" +
+                        "RETURN count(p) AS accessCount\n" +
+                        "UNION\n" +
                         "START admin=node:administrator(name={adminName}),\n" +
-                                "      company=node:company(resourceName={resourceName})\n" +
-                                "MATCH p=admin-[:MEMBER_OF]->()-[permission:ALLOWED]->()<-[:CHILD_OF*0..3]-company\n" +
-                                "WHERE (permission.inherit=true) AND NOT (admin-[:MEMBER_OF]->()-[:DENIED]->()<-[:CHILD_OF*0..3]-company)\n" +
-                                "RETURN COUNT(p) AS accessCount";
+                        "      company=node:company(resourceName={resourceName})\n" +
+                        "MATCH p=(admin)-[:MEMBER_OF]->()-[:ALLOWED_DO_NOT_INHERIT]->(company)\n" +
+                        "RETURN count(p) AS accessCount";
 
-                String notInheritedQuery =
-                        "START admin=node:administrator(name={adminName}),\n" +
-                                "      company=node:company(resourceName={resourceName})\n" +
-                                "MATCH p=admin-[:MEMBER_OF]->()-[permission:ALLOWED]->company\n" +
-                                "WHERE (permission.inherit=false)\n" +
-                                "RETURN COUNT(p) AS accessCount";
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put( "adminName", adminName );
+        params.put( "resourceName", resourceName );
 
-                Map<String, Object> params = new HashMap<String, Object>();
-                params.put( "adminName", adminName );
-                params.put( "resourceName", resourceName );
-
-                return executionEngine.execute( params, inheritedQuery, notInheritedQuery );
+        return executionEngine.execute( query, params );
     }
 }

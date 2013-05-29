@@ -17,25 +17,26 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdatabases.queries.helpers.PrintingExecutionEngineWrapper;
+import org.neo4j.graphdatabases.queries.helpers.QueryUnionExecutionResult;
 import org.neo4j.graphdatabases.queries.traversals.IndexResources;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Path;
 
-public class AccessControlNoAttributesQueriesTest
+public class AccessControlWithRelationshipPropertiesQueriesTest
 {
     @Rule
-    public static TestName testName = new TestName();
+    public static TestName name = new TestName();
 
     private static GraphDatabaseService db;
-    private static AccessControlNoAttributesQueries queries;
+    private static AccessControlWithRelationshipPropertiesQueries queries;
 
     @BeforeClass
     public static void init()
     {
         db = createDatabase();
-        queries = new AccessControlNoAttributesQueries( new PrintingExecutionEngineWrapper( db,
-                "access-control-revised", testName ) );
+        queries = new AccessControlWithRelationshipPropertiesQueries( new PrintingExecutionEngineWrapper( db, "access-control", name ) );
     }
 
     @AfterClass
@@ -52,20 +53,20 @@ public class AccessControlNoAttributesQueriesTest
         // these permissions are attached.
 
         // when
-        ExecutionResult results = queries.findAccessibleResources( "Ben" );
+        QueryUnionExecutionResult results = queries.findAccessibleResources( "Ben" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Account-1", iterator.next().get( "account" ) );
-        assertEquals( "Account-2", iterator.next().get( "account" ) );
-        assertEquals( "Account-3", iterator.next().get( "account" ) );
-        assertEquals( "Account-6", iterator.next().get( "account" ) );
-        assertEquals( "Account-4", iterator.next().get( "account" ) );
-        assertEquals( "Account-5", iterator.next().get( "account" ) );
-        assertEquals( "Account-7", iterator.next().get( "account" ) );
+        assertEquals( "Account-1", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
+        assertEquals( "Account-2", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
+        assertEquals( "Account-3", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
+        assertEquals( "Account-6", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
+        assertEquals( "Account-4", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
+        assertEquals( "Account-5", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
+        assertEquals( "Account-7", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -79,41 +80,18 @@ public class AccessControlNoAttributesQueriesTest
         // a child of Acme, should not be included in results
 
         // when
-        ExecutionResult results = queries.findAccessibleResources( "Sarah" );
+        QueryUnionExecutionResult results = queries.findAccessibleResources( "Sarah" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Account-4", iterator.next().get( "account" ) );
-        assertEquals( "Account-5", iterator.next().get( "account" ) );
-        assertEquals( "Account-1", iterator.next().get( "account" ) );
-        assertEquals( "Account-2", iterator.next().get( "account" ) );
-        assertEquals( "Account-3", iterator.next().get( "account" ) );
-
-        assertFalse( iterator.hasNext() );
-    }
-
-    @Test
-    public void deniedExcludesCompanyFromPermissionsTree2() throws Exception
-    {
-        // Liz is a member of Group-4, which has ALLOWED_INHERIT on BigCo.
-        // However, she is also a member of Group-5, which has DENIED on AcquiredLtd.
-        // This DENIED also debars Liz from Subsidiary and DevShop.
-        // Liz's membership of Group-6, with its ALLOWED_DO_NOT_INHERIT on One-Man Shop
-        // gives Liz access to One-Man Shop
-
-        // when
-        ExecutionResult results = queries.findAccessibleResources( "Liz" );
-
-        // then
-        Iterator<Map<String, Object>> iterator = results.iterator();
-
-        assertTrue( iterator.hasNext() );
-
-        assertEquals( "Account-8", iterator.next().get( "account" ) );
-        assertEquals( "Account-10", iterator.next().get( "account" ) );
+        assertEquals( "Account-4", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
+        assertEquals( "Account-5", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
+        assertEquals( "Account-1", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
+        assertEquals( "Account-2", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
+        assertEquals( "Account-3", ((Path) iterator.next().get( "paths" )).endNode().getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -125,15 +103,15 @@ public class AccessControlNoAttributesQueriesTest
         // This tests this combination (for a 2-layer organizational structure).
 
         // given
-        ExecutionResult results = queries.findAccessibleCompanies( "Sarah" );
+        QueryUnionExecutionResult results = queries.findAccessibleCompanies( "Sarah" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Startup", iterator.next().get( "company" ) );
-        assertEquals( "Acme", iterator.next().get( "company" ) );
+        assertEquals( "Startup", ((Node) iterator.next().get( "company" )).getProperty( "name" ) );
+        assertEquals( "Acme", ((Node) iterator.next().get( "company" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -144,17 +122,17 @@ public class AccessControlNoAttributesQueriesTest
         // Ben is a member of groups that have ALLOWED_INHERIT
 
         // given
-        ExecutionResult results = queries.findAccessibleCompanies( "Ben" );
+        QueryUnionExecutionResult results = queries.findAccessibleCompanies( "Ben" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Acme", iterator.next().get( "company" ) );
-        assertEquals( "Spinoff", iterator.next().get( "company" ) );
-        assertEquals( "Startup", iterator.next().get( "company" ) );
-        assertEquals( "Skunkworkz", iterator.next().get( "company" ) );
+        assertEquals( "Acme", ((Node) iterator.next().get( "company" )).getProperty( "name" ) );
+        assertEquals( "Spinoff", ((Node) iterator.next().get( "company" )).getProperty( "name" ) );
+        assertEquals( "Startup", ((Node) iterator.next().get( "company" )).getProperty( "name" ) );
+        assertEquals( "Skunkworkz", ((Node) iterator.next().get( "company" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -166,15 +144,15 @@ public class AccessControlNoAttributesQueriesTest
         // DENIED at the next level, and ALLOWED_DO_NOT_INHERIT at the bottom layer.
 
         // given
-        ExecutionResult results = queries.findAccessibleCompanies( "Liz" );
+        QueryUnionExecutionResult results = queries.findAccessibleCompanies( "Liz" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "BigCompany", iterator.next().get( "company" ) );
-        assertEquals( "One-ManShop", iterator.next().get( "company" ) );
+        assertEquals( "BigCompany", ((Node) iterator.next().get( "company" )).getProperty( "name" ) );
+        assertEquals( "One-ManShop", ((Node) iterator.next().get( "company" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -183,15 +161,15 @@ public class AccessControlNoAttributesQueriesTest
     public void shouldFindAccessibleAccountsForAdminAndCompany() throws Exception
     {
         // given
-        ExecutionResult results = queries.findAccessibleAccountsForCompany( "Sarah", "Startup" );
+        QueryUnionExecutionResult results = queries.findAccessibleAccountsForCompany( "Sarah", "Startup" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Account-4", iterator.next().get( "account" ) );
-        assertEquals( "Account-5", iterator.next().get( "account" ) );
+        assertEquals( "Account-4", ((Node) iterator.next().get( "account" )).getProperty( "name" ) );
+        assertEquals( "Account-5", ((Node) iterator.next().get( "account" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
 
@@ -201,14 +179,14 @@ public class AccessControlNoAttributesQueriesTest
     public void moreComplexShouldFindAccessibleAccountsForAdminAndCompany() throws Exception
     {
         // given
-        ExecutionResult results = queries.findAccessibleAccountsForCompany( "Liz", "BigCompany" );
+        QueryUnionExecutionResult results = queries.findAccessibleAccountsForCompany( "Liz", "BigCompany" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Account-8", iterator.next().get( "account" ) );
+        assertEquals( "Account-8", ((Node) iterator.next().get( "account" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
 
@@ -218,16 +196,16 @@ public class AccessControlNoAttributesQueriesTest
     public void shouldFindAccessibleAccountsForAdminAndCompanyWhenNoAllowedWithInheritFalse() throws Exception
     {
         // given
-        ExecutionResult results = queries.findAccessibleAccountsForCompany( "Ben", "Startup" );
+        QueryUnionExecutionResult results = queries.findAccessibleAccountsForCompany( "Ben", "Startup" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Account-4", iterator.next().get( "account" ) );
-        assertEquals( "Account-5", iterator.next().get( "account" ) );
-        assertEquals( "Account-7", iterator.next().get( "account" ) );
+        assertEquals( "Account-4", ((Node) iterator.next().get( "account" )).getProperty( "name" ) );
+        assertEquals( "Account-5", ((Node) iterator.next().get( "account" )).getProperty( "name" ) );
+        assertEquals( "Account-7", ((Node) iterator.next().get( "account" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -249,15 +227,15 @@ public class AccessControlNoAttributesQueriesTest
         // He has access to Account-10 by virtue of Group-7
 
         // given
-        ExecutionResult results = queries.findAdminForResource( "Account-10" );
+        QueryUnionExecutionResult results = queries.findAdminForResource( "Account-10" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Phil", iterator.next().get( "admin" ) );
-        assertEquals( "Liz", iterator.next().get( "admin" ) );
+        assertEquals( "Phil", ((Node) iterator.next().get( "admin" )).getProperty( "name" ) );
+        assertEquals( "Liz", ((Node) iterator.next().get( "admin" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -279,14 +257,14 @@ public class AccessControlNoAttributesQueriesTest
         // He has access by to Kate virtue of Group-3
 
         // given
-        ExecutionResult results = queries.findAdminForResource( "Kate" );
+        QueryUnionExecutionResult results = queries.findAdminForResource( "Kate" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Ben", iterator.next().get( "admin" ) );
+        assertEquals( "Ben", ((Node) iterator.next().get( "admin" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -307,14 +285,14 @@ public class AccessControlNoAttributesQueriesTest
         // He does not have access to BigCompany
 
         // given
-        ExecutionResult results = queries.findAdminForCompany( "BigCompany" );
+        QueryUnionExecutionResult results = queries.findAdminForCompany( "BigCompany" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Liz", iterator.next().get( "admin" ) );
+        assertEquals( "Liz", ((Node) iterator.next().get( "admin" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -335,7 +313,7 @@ public class AccessControlNoAttributesQueriesTest
         // He does not have access to AcquiredLtd
 
         // given
-        ExecutionResult results = queries.findAdminForCompany( "AcquiredLtd" );
+        QueryUnionExecutionResult results = queries.findAdminForCompany( "AcquiredLtd" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
@@ -359,14 +337,14 @@ public class AccessControlNoAttributesQueriesTest
         // He has access to Subsidiary by virtue of Group-7
 
         // given
-        ExecutionResult results = queries.findAdminForCompany( "Subsidiary" );
+        QueryUnionExecutionResult results = queries.findAdminForCompany( "Subsidiary" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Phil", iterator.next().get( "admin" ) );
+        assertEquals( "Phil", ((Node) iterator.next().get( "admin" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -387,15 +365,15 @@ public class AccessControlNoAttributesQueriesTest
         // He has access to One-ManShop by virtue of Group-7
 
         // given
-        ExecutionResult results = queries.findAdminForCompany( "One-ManShop" );
+        QueryUnionExecutionResult results = queries.findAdminForCompany( "One-ManShop" );
 
         // then
         Iterator<Map<String, Object>> iterator = results.iterator();
 
         assertTrue( iterator.hasNext() );
 
-        assertEquals( "Phil", iterator.next().get( "admin" ) );
-        assertEquals( "Liz", iterator.next().get( "admin" ) );
+        assertEquals( "Phil", ((Node) iterator.next().get( "admin" )).getProperty( "name" ) );
+        assertEquals( "Liz", ((Node) iterator.next().get( "admin" )).getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -406,12 +384,12 @@ public class AccessControlNoAttributesQueriesTest
         Map<String, List<Long>> testData = new HashMap<String, List<Long>>();
         testData.put( "Alistair", asList( 1L, 0L ) );
         testData.put( "Account-8", asList( 1L, 0L ) );
-        testData.put( "Eve", asList( 0L ) );
-        testData.put( "Account-9", asList( 0L ) );
-        testData.put( "Mary", asList( 0L ) );
-        testData.put( "Account-12", asList( 0L ) );
-        testData.put( "Gary", asList( 0L ) );
-        testData.put( "Account-11", asList( 0L ) );
+        testData.put( "Eve", asList( 0L, 0L ) );
+        testData.put( "Account-9", asList( 0L, 0L ) );
+        testData.put( "Mary", asList( 0L, 0L ) );
+        testData.put( "Account-12", asList( 0L, 0L ) );
+        testData.put( "Gary", asList( 0L, 0L ) );
+        testData.put( "Account-11", asList( 0L, 0L ) );
         testData.put( "Bill", asList( 0L, 1L ) );
         testData.put( "Account-10", asList( 0L, 1L ) );
 
@@ -421,18 +399,20 @@ public class AccessControlNoAttributesQueriesTest
             Iterator<Long> expectedResultsIterator = expectedResults.iterator();
 
             // given
-            ExecutionResult results = queries.hasAccessToResource( "Liz", resourceName );
+            QueryUnionExecutionResult results = queries.hasAccessToResource( "Liz", resourceName );
 
             // then
             Iterator<Map<String, Object>> iterator = results.iterator();
 
             assertTrue( iterator.hasNext() );
-            assertEquals( expectedResultsIterator.next(), iterator.next().get( "accessCount" ) );
-            if ( expectedResultsIterator.hasNext() )
-            {
-                assertEquals( expectedResultsIterator.next(), iterator.next().get( "accessCount" ) );
-            }
+
+            assertEquals( resourceName + " inherited", expectedResultsIterator.next(),
+                    iterator.next().get( "accessCount" ) );
+            assertEquals( resourceName + " not inherited", expectedResultsIterator.next(),
+                    iterator.next().get( "accessCount" ) );
+
             assertFalse( iterator.hasNext() );
+            assertFalse( expectedResultsIterator.hasNext() );
         }
 
     }
@@ -440,40 +420,40 @@ public class AccessControlNoAttributesQueriesTest
     @Test
     public void shouldDetermineWhetherAdminHasAccessToIndexedResource() throws Exception
     {
-        Map<String, Boolean> testData = new HashMap<String, Boolean>();
-        testData.put( "Alistair", true );
-        testData.put( "Account-8", true );
-        testData.put( "Eve", false );
-        testData.put( "Account-9", false );
-        testData.put( "Mary", false );
-        testData.put( "Account-12", false );
-        testData.put( "Gary", false );
-        testData.put( "Account-11", false );
-        testData.put( "Bill", true );
-        testData.put( "Account-10", true );
+        Map<String, List<Long>> testData = new HashMap<String, List<Long>>();
+        testData.put( "Alistair", asList( 1L, 0L ) );
+        testData.put( "Account-8", asList( 1L, 0L ) );
+        testData.put( "Eve", asList( 0L, 0L ) );
+        testData.put( "Account-9", asList( 0L, 0L ) );
+        testData.put( "Mary", asList( 0L, 0L ) );
+        testData.put( "Account-12", asList( 0L, 0L ) );
+        testData.put( "Gary", asList( 0L, 0L ) );
+        testData.put( "Account-11", asList( 0L, 0L ) );
+        testData.put( "Bill", asList( 0L, 1L ) );
+        testData.put( "Account-10", asList( 0L, 1L ) );
 
-        for ( Map.Entry<String, Boolean> entry : testData.entrySet() )
+        for ( String resourceName : testData.keySet() )
         {
+            List<Long> expectedResults = testData.get( resourceName );
+            Iterator<Long> expectedResultsIterator = expectedResults.iterator();
+
             // given
-            ExecutionResult results = queries.hasAccessToIndexedResource( "Liz", entry.getKey() );
+            QueryUnionExecutionResult results = queries.hasAccessToIndexedResource( "Liz", resourceName );
 
             // then
-            assertEquals( entry.getKey(), entry.getValue(), isAuthorized( results ) );
+            Iterator<Map<String, Object>> iterator = results.iterator();
+
+            assertTrue( iterator.hasNext() );
+
+            assertEquals( resourceName + " inherited", expectedResultsIterator.next(),
+                    iterator.next().get( "accessCount" ) );
+            assertEquals( resourceName + " not inherited", expectedResultsIterator.next(),
+                    iterator.next().get( "accessCount" ) );
+
+            assertFalse( iterator.hasNext() );
+            assertFalse( expectedResultsIterator.hasNext() );
         }
 
-    }
-
-    private boolean isAuthorized( ExecutionResult result )
-    {
-        Iterator<Long> accessCountIterator = result.columnAs( "accessCount" );
-        while ( accessCountIterator.hasNext() )
-        {
-            if (accessCountIterator.next() > 0L)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
 
@@ -560,14 +540,14 @@ public class AccessControlNoAttributesQueriesTest
                 "bill-[:HAS_ACCOUNT]->account10,\n" +
                 "gary-[:HAS_ACCOUNT]->account11,\n" +
                 "mary-[:HAS_ACCOUNT]->account12,\n" +
-                "group1-[:ALLOWED_INHERIT]->acme,\n" +
-                "group2-[:ALLOWED_DO_NOT_INHERIT]->acme,\n" +
+                "group1-[:ALLOWED {inherit:true}]->acme,\n" +
+                "group2-[:ALLOWED {inherit:false}]->acme,\n" +
                 "group2-[:DENIED]->skunkworkz,\n" +
-                "group3-[:ALLOWED_INHERIT]->startup,\n" +
-                "group4-[:ALLOWED_INHERIT]->bigco,\n" +
+                "group3-[:ALLOWED {inherit:true}]->startup,\n" +
+                "group4-[:ALLOWED {inherit:true}]->bigco,\n" +
                 "group5-[:DENIED]->acquired,\n" +
-                "group6-[:ALLOWED_DO_NOT_INHERIT]->onemanshop,\n" +
-                "group7-[:ALLOWED_INHERIT]->subsidiary";
+                "group6-[:ALLOWED {inherit:false}]->onemanshop,\n" +
+                "group7-[:ALLOWED {inherit:true}]->subsidiary";
 
         GraphDatabaseService graph = createFromCypher(
                 "Access Control Revised",

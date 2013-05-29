@@ -1,22 +1,24 @@
 package org.neo4j.graphdatabases.queries.helpers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.neo4j.graphdatabases.queries.helpers.Db.createFromCypher;
-import static org.neo4j.graphdatabases.queries.testing.IndexParam.indexParam;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import static org.neo4j.graphdatabases.queries.helpers.Db.createFromCypher;
+import static org.neo4j.graphdatabases.queries.testing.IndexParam.indexParam;
 
 public class QueryUnionExecutionEngineTest
 {
@@ -268,7 +270,6 @@ public class QueryUnionExecutionEngineTest
 
         // then
         String resultsString = results.toString();
-        System.out.println( resultsString );
         assertTrue( resultsString.startsWith(
                 "+-------------+\n" +
                         "| person.name |\n" +

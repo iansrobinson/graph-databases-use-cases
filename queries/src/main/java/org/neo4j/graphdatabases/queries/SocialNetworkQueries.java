@@ -1,7 +1,5 @@
 package org.neo4j.graphdatabases.queries;
 
-import static org.neo4j.graphdb.DynamicRelationshipType.withName;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -22,6 +20,8 @@ import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
 import org.neo4j.kernel.Uniqueness;
+
+import static org.neo4j.graphdb.DynamicRelationshipType.withName;
 
 public class SocialNetworkQueries
 {
@@ -272,44 +272,4 @@ public class SocialNetworkQueries
 
         return executionEngineWrapper.execute( query, new HashMap<String, Object>() );
     }
-
-
-//    public GremlinPipeline friendOfAFriendWithParticularInterestGremlin( String userName,
-//                                                                         final String topicLabel )
-//            throws ScriptException
-//    {
-//        Map<String, String> params = new HashMap<String, String>();
-//        params.put( "userName", userName );
-//        params.put( "topicLabel", topicLabel );
-//
-////        String script = "g.V('name', userName).out('WORKED_ON').in('WORKED_ON').loop(2){it.loops < 4}.dedup().as
-//// ('v')" +
-////                ".out('INTERESTED_IN').filter{it.name==topicLabel}.back('v').name";
-//        String script = "g.V('name', userName).out('WORKED_ON').in('WORKED_ON').loop(2){it.loops < 3}.and(_().out" +
-//                "('INTERESTED_IN').filter{it.name==topicLabel}).dedup().name";
-//
-//        ScriptEngine engine = new GremlinGroovyScriptEngine();
-//
-//        final Bindings bindings = createBindings( db, params );
-//
-//        return (GremlinPipeline) engine.eval( script, bindings );
-//    }
-
-//    private Bindings createBindings( GraphDatabaseService neo4j, Map params )
-//    {
-//        final Bindings bindings = createInitialBinding( neo4j );
-//        if ( params != null )
-//        {
-//            bindings.putAll( params );
-//        }
-//        return bindings;
-//    }
-//
-//    private Bindings createInitialBinding( GraphDatabaseService neo4j )
-//    {
-//        final Bindings bindings = new SimpleBindings();
-//        final Neo4jGraph graph = new Neo4jGraph( neo4j, false );
-//        bindings.put( "g", graph );
-//        return bindings;
-//    }
 }

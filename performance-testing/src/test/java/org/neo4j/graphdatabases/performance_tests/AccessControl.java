@@ -1,7 +1,5 @@
 package org.neo4j.graphdatabases.performance_tests;
 
-import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResults.printResults;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -9,24 +7,24 @@ import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+
 import org.neo4j.cypher.javacompat.ExecutionResult;
-import org.neo4j.graphdatabases.AccessControl;
-import org.neo4j.graphdatabases.AccessControlNoAttributes;
+import org.neo4j.graphdatabases.AccessControlConfig;
+import org.neo4j.graphdatabases.AccessControlWithRelationshipPropertiesConfig;
 import org.neo4j.graphdatabases.performance_tests.testing.DefaultExecutionEngineWrapper;
 import org.neo4j.graphdatabases.performance_tests.testing.MultipleTestRuns;
 import org.neo4j.graphdatabases.performance_tests.testing.ParamsGenerator;
 import org.neo4j.graphdatabases.performance_tests.testing.SingleTest;
 import org.neo4j.graphdatabases.performance_tests.testing.SysOutWriter;
-import org.neo4j.graphdatabases.queries.AccessControlNoAttributesQueries;
+import org.neo4j.graphdatabases.queries.AccessControlQueries;
 import org.neo4j.graphdatabases.queries.helpers.DbUtils;
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
-@Ignore
-public class AccessControlNoAttributesPerformanceTest
+import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResults.printResults;
+
+public class AccessControl
 {
     private static final int NUMBER_OF_TEST_RUNS = 100;
     private static final int NUMBER_OF_RESULTS = 15;
@@ -35,7 +33,7 @@ public class AccessControlNoAttributesPerformanceTest
     private static int numberOfEmployees;
 
     private static GraphDatabaseService db;
-    private static AccessControlNoAttributesQueries queries;
+    private static AccessControlQueries queries;
     private static MultipleTestRuns multipleTestRuns;
     private static Random random;
     private static TestOutputWriter writer = SysOutWriter.INSTANCE;
@@ -45,25 +43,14 @@ public class AccessControlNoAttributesPerformanceTest
     {
         try
         {
-            Map<String, String> params = new HashMap<String, String>();
-            params.put( "dump_configuration", "true" );
-            params.put( "cache_type", "gcr" );
-            params.put( "allow_store_upgrade", "true" );
-
-            db = new GraphDatabaseFactory()
-                    .newEmbeddedDatabaseBuilder( AccessControlNoAttributes.STORE_DIR )
-                    .setConfig( params )
-                    .newGraphDatabase();
-            queries = new AccessControlNoAttributesQueries( new DefaultExecutionEngineWrapper( db ) );
+            db = DbUtils.existingDB( AccessControlConfig.STORE_DIR );
+            queries = new AccessControlQueries( new DefaultExecutionEngineWrapper( db ) );
             multipleTestRuns = new MultipleTestRuns( NUMBER_OF_TEST_RUNS, writer );
 
             random = new Random();
 
             numberOfAccounts = DbUtils.numberOfItemsInIndex( db, "account", "name" );
             numberOfEmployees = DbUtils.numberOfItemsInIndex( db, "employee", "name" );
-
-//        GraphStatistics.create( db, AccessControlNoAttributes.TITLE )
-//                .describeTo( new AsciiDocFormatter( SysOutLog.INSTANCE ) );
         }
         catch ( Exception ex )
         {
@@ -266,7 +253,7 @@ public class AccessControlNoAttributesPerformanceTest
                 HashMap<String, String> params = new HashMap<String, String>();
 
                 String adminName = String.format( "administrator-%s",
-                        random.nextInt( AccessControl.NUMBER_OF_ADMINS ) + 1 );
+                        random.nextInt( AccessControlWithRelationshipPropertiesConfig.NUMBER_OF_ADMINS ) + 1 );
 
                 String resourceName;
                 if ( random.nextInt( 2 ) < 1 )

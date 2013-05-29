@@ -1,8 +1,5 @@
 package org.neo4j.graphdatabases.performance_tests;
 
-import static java.util.Arrays.asList;
-import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResults.printResults;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,25 +10,28 @@ import org.joda.time.Interval;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
-import org.neo4j.graphdatabases.Logistics;
+import org.neo4j.graphdatabases.LogisticsConfig;
 import org.neo4j.graphdatabases.performance_tests.testing.DefaultExecutionEngineWrapper;
 import org.neo4j.graphdatabases.performance_tests.testing.MultipleTestRuns;
 import org.neo4j.graphdatabases.performance_tests.testing.ParamsGenerator;
 import org.neo4j.graphdatabases.performance_tests.testing.SingleTest;
 import org.neo4j.graphdatabases.performance_tests.testing.SysOutWriter;
 import org.neo4j.graphdatabases.queries.LogisticsQueries;
+import org.neo4j.graphdatabases.queries.helpers.DbUtils;
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
-@Ignore
-public class LogisticsPerformanceTest
+import static java.util.Arrays.asList;
+
+import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResults.printResults;
+
+public class Logistics
 {
-    public static final int NUMBER_OF_TEST_RUNS = 1000;
+    public static final int NUMBER_OF_TEST_RUNS = 100;
     private static final int NUMBER_OF_RESULTS = 15;
 
     private static GraphDatabaseService db;
@@ -43,27 +43,7 @@ public class LogisticsPerformanceTest
     @BeforeClass
     public static void init()
     {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put( "dump_configuration", "true" );
-        params.put( "cache_type", "gcr" );
-
-        try
-        {
-            db = new GraphDatabaseFactory()
-                                .newEmbeddedDatabaseBuilder( Logistics.STORE_DIR )
-                                .setConfig( params )
-                                .newGraphDatabase();
-        }
-        catch ( Exception e )
-        {
-            writer.writeln( "Error in init(): " + e.getMessage() );
-            e.printStackTrace();
-        }
-
-//        warmCache(db, writer);
-//
-//        GraphStatistics.create( db, Logistics.TITLE )
-//                .describeTo( new AsciiDocFormatter( SysOutLog.INSTANCE ) );
+        db = DbUtils.existingDB( LogisticsConfig.STORE_DIR );
 
         queries = new LogisticsQueries( db, new DefaultExecutionEngineWrapper( db ) );
         multipleTestRuns = new MultipleTestRuns( NUMBER_OF_TEST_RUNS, writer );
@@ -241,7 +221,7 @@ public class LogisticsPerformanceTest
                     }
                     params.put( "end",
                             String.format( "delivery-segment-%s", random.nextInt( deliverySegmentCount ) + 1 ) );
-                    DateTime startDtm = Logistics.START_DATE.plusDays( random.nextInt( 6 ) );
+                    DateTime startDtm = LogisticsConfig.START_DATE.plusDays( random.nextInt( 6 ) );
                     params.put( "interval", new Interval( startDtm, startDtm.plusDays( 1 ) ).toString() );
                     return params;
                 }

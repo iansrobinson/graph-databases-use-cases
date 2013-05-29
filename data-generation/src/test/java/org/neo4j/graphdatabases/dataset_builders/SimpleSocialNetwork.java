@@ -1,17 +1,11 @@
 package org.neo4j.graphdatabases.dataset_builders;
 
-import static org.neo4j.neode.Range.minMax;
-import static org.neo4j.neode.RelationshipUniqueness.BOTH_DIRECTIONS;
-import static org.neo4j.neode.TargetNodesStrategy.getExisting;
-import static org.neo4j.neode.properties.Property.indexableProperty;
-
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import org.neo4j.graphdatabases.SimpleSocialNetwork;
+
+import org.neo4j.graphdatabases.SimpleSocialNetworkConfig;
+import org.neo4j.graphdatabases.queries.helpers.DbUtils;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.kernel.impl.util.FileUtils;
@@ -25,26 +19,26 @@ import org.neo4j.neode.logging.SysOutLog;
 import org.neo4j.neode.statistics.AsciiDocFormatter;
 import org.neo4j.neode.statistics.GraphStatistics;
 
-@Ignore
-public class BuildSimpleSocialNetworkGraph
+import static org.neo4j.neode.Range.minMax;
+import static org.neo4j.neode.RelationshipUniqueness.BOTH_DIRECTIONS;
+import static org.neo4j.neode.TargetNodesStrategy.getExisting;
+import static org.neo4j.neode.properties.Property.indexableProperty;
+
+public class SimpleSocialNetwork
 {
     @Test
     public void buildSocialNetwork() throws Exception
     {
-        File dir = new File( SimpleSocialNetwork.STORE_DIR );
+        File dir = new File( SimpleSocialNetworkConfig.STORE_DIR );
         FileUtils.deleteRecursively( dir );
 
-        Map<String, String> params = new HashMap<String, String>();
-        params.put( "dump_configuration", "true" );
-        params.put( "cache_type", "gcr" );
-
         GraphDatabaseService db = new GraphDatabaseFactory()
-                            .newEmbeddedDatabaseBuilder( SimpleSocialNetwork.STORE_DIR )
-                            .setConfig( params )
-                            .newGraphDatabase();
+                .newEmbeddedDatabaseBuilder( SimpleSocialNetworkConfig.STORE_DIR )
+                .setConfig( DbUtils.dbConfig() )
+                .newGraphDatabase();
         createSampleDataset( db );
 
-        GraphStatistics.create( db, SimpleSocialNetwork.TITLE )
+        GraphStatistics.create( db, SimpleSocialNetworkConfig.TITLE )
                 .describeTo( new AsciiDocFormatter( SysOutLog.INSTANCE ) );
 
         db.shutdown();
@@ -57,7 +51,7 @@ public class BuildSimpleSocialNetworkGraph
             @Override
             public void write( String value )
             {
-                System.out.println(value);
+                System.out.println( value );
             }
         } );
 
@@ -70,13 +64,13 @@ public class BuildSimpleSocialNetworkGraph
                 dsm.newDataset( "Simple social network example" );
 
         NodeCollection users =
-                userSpec.create( SimpleSocialNetwork.NUMBER_USERS )
+                userSpec.create( SimpleSocialNetworkConfig.NUMBER_USERS )
                         .update( dataset );
 
         users.createRelationshipsTo(
                 getExisting( users )
-                        .numberOfTargetNodes( minMax( SimpleSocialNetwork.MIN_NUMBER_OF_FRIENDS,
-                                SimpleSocialNetwork.MAX_NUMBER_OF_FRIENDS ) )
+                        .numberOfTargetNodes( minMax( SimpleSocialNetworkConfig.MIN_NUMBER_OF_FRIENDS,
+                                SimpleSocialNetworkConfig.MAX_NUMBER_OF_FRIENDS ) )
                         .relationship( friend )
                         .relationshipConstraints( BOTH_DIRECTIONS ) )
                 .updateNoReturn( dataset, 20000 );

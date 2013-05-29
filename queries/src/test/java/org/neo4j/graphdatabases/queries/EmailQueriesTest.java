@@ -1,20 +1,23 @@
 package org.neo4j.graphdatabases.queries;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.neo4j.graphdatabases.queries.helpers.Db.createFromCypher;
-
 import java.util.Iterator;
 import java.util.Map;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdatabases.queries.helpers.PrintingExecutionEngineWrapper;
 import org.neo4j.graphdatabases.queries.testing.IndexParam;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import static org.neo4j.graphdatabases.queries.helpers.Db.createFromCypher;
+import static org.neo4j.helpers.collection.IteratorUtil.count;
 
 public class EmailQueriesTest
 {
@@ -84,17 +87,17 @@ public class EmailQueriesTest
     }
 
     @Test
-        public void lossyDb() throws Exception
-        {
-            GraphDatabaseService db = createDatabase4();
-            EmailQueries queries = new EmailQueries( db, new PrintingExecutionEngineWrapper( db, "email", name ) );
+    public void lossyDb() throws Exception
+    {
+        GraphDatabaseService db = createDatabase4();
+        EmailQueries queries = new EmailQueries( db, new PrintingExecutionEngineWrapper( db, "email", name ) );
 
-            ExecutionResult result = queries.lossyDb();
+        ExecutionResult result = queries.lossyDb();
 
-            System.out.println(result.dumpToString());
+        assertEquals(1, count(result.iterator()));
 
-            db.shutdown();
-        }
+        db.shutdown();
+    }
 
     private static GraphDatabaseService createDatabase()
     {
@@ -221,21 +224,21 @@ public class EmailQueriesTest
     }
 
     private static GraphDatabaseService createDatabase4()
-        {
-            String cypher = "CREATE (alice {username: 'Alice', _label:'user'}),\n" +
-                    "(bob {username: 'Bob', _label:'user'}),\n" +
-                    "(charlie {username: 'Charlie', _label:'user'}),\n" +
-                    "(davina {username: 'Davina', _label:'user'}),\n" +
-                    "(edward {username: 'Edward', _label:'user'}),\n" +
-                    "(alice)-[:ALIAS_OF]->(bob),\n" +
-                    "(bob)-[:EMAILED]->(charlie),\n" +
-                    "(bob)-[:CC]->(davina),\n" +
-                    "(bob)-[:BCC]->(edward)";
+    {
+        String cypher = "CREATE (alice {username: 'Alice', _label:'user'}),\n" +
+                "(bob {username: 'Bob', _label:'user'}),\n" +
+                "(charlie {username: 'Charlie', _label:'user'}),\n" +
+                "(davina {username: 'Davina', _label:'user'}),\n" +
+                "(edward {username: 'Edward', _label:'user'}),\n" +
+                "(alice)-[:ALIAS_OF]->(bob),\n" +
+                "(bob)-[:EMAILED]->(charlie),\n" +
+                "(bob)-[:CC]->(davina),\n" +
+                "(bob)-[:BCC]->(edward)";
 
-            return createFromCypher(
-                    "Email",
-                    cypher,
-                    IndexParam.indexParam( "user", "username" )
-            );
-        }
+        return createFromCypher(
+                "Email",
+                cypher,
+                IndexParam.indexParam( "user", "username" )
+        );
+    }
 }

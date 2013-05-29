@@ -1,20 +1,12 @@
 package org.neo4j.graphdatabases.dataset_builders;
 
-import static org.neo4j.neode.Range.minMax;
-import static org.neo4j.neode.TargetNodesStrategy.create;
-import static org.neo4j.neode.TargetNodesStrategy.getExisting;
-import static org.neo4j.neode.TargetNodesStrategy.getOrCreate;
-import static org.neo4j.neode.properties.Property.indexableProperty;
-import static org.neo4j.neode.properties.Property.property;
-
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import org.neo4j.graphdatabases.AccessControl;
+
+import org.neo4j.graphdatabases.AccessControlWithRelationshipPropertiesConfig;
+import org.neo4j.graphdatabases.queries.helpers.DbUtils;
 import org.neo4j.graphdatabases.queries.traversals.IndexResources;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -33,8 +25,14 @@ import org.neo4j.neode.properties.Property;
 import org.neo4j.neode.statistics.AsciiDocFormatter;
 import org.neo4j.neode.statistics.GraphStatistics;
 
-@Ignore
-public class BuildAccessControlGraph
+import static org.neo4j.neode.Range.minMax;
+import static org.neo4j.neode.TargetNodesStrategy.create;
+import static org.neo4j.neode.TargetNodesStrategy.getExisting;
+import static org.neo4j.neode.TargetNodesStrategy.getOrCreate;
+import static org.neo4j.neode.properties.Property.indexableProperty;
+import static org.neo4j.neode.properties.Property.property;
+
+public class AccessControlWithRelationshipProperties
 {
     public static final Range GROUPS_PER_ADMIN = minMax( 1, 3 );
     public static final Range ALLOWED_COMPANIES_PER_GROUP = minMax( 10, 50 );
@@ -45,17 +43,13 @@ public class BuildAccessControlGraph
     @Test
     public void buildAccessControl() throws Exception
     {
-        File dir = new File( AccessControl.STORE_DIR );
+        File dir = new File( AccessControlWithRelationshipPropertiesConfig.STORE_DIR );
         FileUtils.deleteRecursively( dir );
 
-        Map<String, String> params = new HashMap<String, String>();
-        params.put( "dump_configuration", "true" );
-        params.put( "cache_type", "gcr" );
-
         GraphDatabaseService db = new GraphDatabaseFactory()
-                            .newEmbeddedDatabaseBuilder( AccessControl.STORE_DIR )
-                            .setConfig( params )
-                            .newGraphDatabase();
+                .newEmbeddedDatabaseBuilder( AccessControlWithRelationshipPropertiesConfig.STORE_DIR )
+                .setConfig( DbUtils.dbConfig() )
+                .newGraphDatabase();
         DatasetManager dsm = new DatasetManager( db, SysOutLog.INSTANCE );
 
         NodeSpecification adminSpec = dsm.nodeSpecification( "administrator", indexableProperty( "name" ) );
@@ -87,39 +81,44 @@ public class BuildAccessControlGraph
         RelationshipSpecification works_for = dsm.relationshipSpecification( "WORKS_FOR" );
         RelationshipSpecification has_account = dsm.relationshipSpecification( "HAS_ACCOUNT" );
 
-        Dataset dataset = dsm.newDataset( AccessControl.TITLE );
+        Dataset dataset = dsm.newDataset( AccessControlWithRelationshipPropertiesConfig.TITLE );
 
-        NodeCollection administrators = adminSpec.create( AccessControl.NUMBER_OF_ADMINS ).update( dataset );
+        NodeCollection administrators = adminSpec.create( AccessControlWithRelationshipPropertiesConfig
+                .NUMBER_OF_ADMINS ).update( dataset );
         NodeCollection groups = administrators.createRelationshipsTo(
-                getOrCreate( groupSpec, AccessControl.NUMBER_OF_GROUPS )
+                getOrCreate( groupSpec, AccessControlWithRelationshipPropertiesConfig.NUMBER_OF_GROUPS )
                         .numberOfTargetNodes( GROUPS_PER_ADMIN )
                         .relationship( member_of )
                         .relationshipConstraints( RelationshipUniqueness.BOTH_DIRECTIONS ) )
                 .update( dataset );
 
         NodeCollection companies1allowed = groups.createRelationshipsTo(
-                getOrCreate( companySpec, percentageOf( AccessControl.NUMBER_OF_COMPANIES, 0.25 ) )
+                getOrCreate( companySpec, percentageOf( AccessControlWithRelationshipPropertiesConfig
+                        .NUMBER_OF_COMPANIES, 0.25 ) )
                         .numberOfTargetNodes( ALLOWED_COMPANIES_PER_GROUP )
                         .relationship( allowed )
                         .relationshipConstraints( RelationshipUniqueness.BOTH_DIRECTIONS ) )
                 .update( dataset );
 
         NodeCollection companies1denied = groups.createRelationshipsTo(
-                getOrCreate( companySpec, percentageOf( AccessControl.NUMBER_OF_COMPANIES, 0.1 ) )
+                getOrCreate( companySpec, percentageOf( AccessControlWithRelationshipPropertiesConfig
+                        .NUMBER_OF_COMPANIES, 0.1 ) )
                         .numberOfTargetNodes( DENIED_COMPANIES_PER_GROUP )
                         .relationship( denied )
                         .relationshipConstraints( RelationshipUniqueness.BOTH_DIRECTIONS ) )
                 .update( dataset );
 
         NodeCollection companies2allowed = groups.createRelationshipsTo(
-                getOrCreate( companySpec, percentageOf( AccessControl.NUMBER_OF_COMPANIES, 0.50 ) )
+                getOrCreate( companySpec, percentageOf( AccessControlWithRelationshipPropertiesConfig
+                        .NUMBER_OF_COMPANIES, 0.50 ) )
                         .numberOfTargetNodes( ALLOWED_COMPANIES_PER_GROUP )
                         .relationship( allowed )
                         .relationshipConstraints( RelationshipUniqueness.BOTH_DIRECTIONS ) )
                 .update( dataset );
 
         NodeCollection companies2denied = groups.createRelationshipsTo(
-                getOrCreate( companySpec, percentageOf( AccessControl.NUMBER_OF_COMPANIES, 0.15 ) )
+                getOrCreate( companySpec, percentageOf( AccessControlWithRelationshipPropertiesConfig
+                        .NUMBER_OF_COMPANIES, 0.15 ) )
                         .numberOfTargetNodes( DENIED_COMPANIES_PER_GROUP )
                         .relationship( denied )
                         .relationshipConstraints( RelationshipUniqueness.BOTH_DIRECTIONS ) )
@@ -155,7 +154,7 @@ public class BuildAccessControlGraph
 
         new IndexResources( db ).execute();
 
-        GraphStatistics.create( db, AccessControl.TITLE )
+        GraphStatistics.create( db, AccessControlWithRelationshipPropertiesConfig.TITLE )
                 .describeTo( new AsciiDocFormatter( SysOutLog.INSTANCE ) );
 
         db.shutdown();

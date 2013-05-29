@@ -1,23 +1,16 @@
 package org.neo4j.graphdatabases.dataset_builders;
 
-import static org.neo4j.neode.Range.exactly;
-import static org.neo4j.neode.Range.minMax;
-import static org.neo4j.neode.TargetNodesStrategy.create;
-import static org.neo4j.neode.TargetNodesStrategy.getOrCreate;
-import static org.neo4j.neode.properties.Property.indexableProperty;
-
 import java.io.File;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
 
 import org.joda.time.Interval;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.neo4j.graphdatabases.Logistics;
+
+import org.neo4j.graphdatabases.LogisticsConfig;
 import org.neo4j.graphdatabases.dataset_builders.helpers.SevenDays;
+import org.neo4j.graphdatabases.queries.helpers.DbUtils;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -30,25 +23,25 @@ import org.neo4j.neode.logging.SysOutLog;
 import org.neo4j.neode.properties.Property;
 import org.neo4j.neode.statistics.AsciiDocFormatter;
 import org.neo4j.neode.statistics.GraphStatistics;
-import sun.plugin.dom.exception.InvalidStateException;
 
-@Ignore
-public class BuildLogisticsGraph
+import static org.neo4j.neode.Range.exactly;
+import static org.neo4j.neode.Range.minMax;
+import static org.neo4j.neode.TargetNodesStrategy.create;
+import static org.neo4j.neode.TargetNodesStrategy.getOrCreate;
+import static org.neo4j.neode.properties.Property.indexableProperty;
+
+public class Logistics
 {
     @Test
     public void buildLogistics() throws Exception
     {
-        File dir = new File( Logistics.STORE_DIR );
+        File dir = new File( LogisticsConfig.STORE_DIR );
         FileUtils.deleteRecursively( dir );
 
-        Map<String, String> params = new HashMap<String, String>();
-        params.put( "dump_configuration", "true" );
-        params.put( "cache_type", "gcr" );
-
         GraphDatabaseService db = new GraphDatabaseFactory()
-                            .newEmbeddedDatabaseBuilder( Logistics.STORE_DIR )
-                            .setConfig( params )
-                            .newGraphDatabase();
+                .newEmbeddedDatabaseBuilder( LogisticsConfig.STORE_DIR )
+                .setConfig( DbUtils.dbConfig() )
+                .newGraphDatabase();
         DatasetManager dsm = new DatasetManager( db, SysOutLog.INSTANCE );
 
         NodeSpecification parcelCentreSpec = dsm.nodeSpecification( "parcel-centre",
@@ -62,15 +55,16 @@ public class BuildLogisticsGraph
 
         Property costProperty = new CostProperty();
 
-        Dataset dataset = dsm.newDataset( Logistics.TITLE );
+        Dataset dataset = dsm.newDataset( LogisticsConfig.TITLE );
 
-        NodeCollection parcelCentres = parcelCentreSpec.create( Logistics.NUMBER_OF_PARCEL_CENTRES ).update( dataset );
+        NodeCollection parcelCentres = parcelCentreSpec.create( LogisticsConfig.NUMBER_OF_PARCEL_CENTRES ).update(
+                dataset );
 
         NodeCollection deliveryBases = parcelCentres.createRelationshipsTo(
                 getOrCreate( deliveryBaseSpec, 400 )
                         .numberOfTargetNodes( minMax(
-                                Logistics.MIN_NUMBER_OF_DELIVERY_BASES_PER_PARCEL_CENTRE,
-                                Logistics.MAX_NUMBER_OF_DELIVERY_BASES_PER_PARCEL_CENTRE ) )
+                                LogisticsConfig.MIN_NUMBER_OF_DELIVERY_BASES_PER_PARCEL_CENTRE,
+                                LogisticsConfig.MAX_NUMBER_OF_DELIVERY_BASES_PER_PARCEL_CENTRE ) )
                         .relationship( dsm.relationshipSpecification( "CONNECTED_TO",
                                 new IntervalProperty( 2 ),
                                 costProperty ) )
@@ -80,8 +74,8 @@ public class BuildLogisticsGraph
         NodeCollection deliveryAreas = deliveryBases.createRelationshipsTo(
                 create( deliveryAreaSpec )
                         .numberOfTargetNodes( minMax(
-                                Logistics.MIN_NUMBER_OF_DELIVERY_AREAS_PER_DELIVERY_BASE,
-                                Logistics.MAX_NUMBER_OF_DELIVERY_AREAS_PER_DELIVERY_BASE ) )
+                                LogisticsConfig.MIN_NUMBER_OF_DELIVERY_AREAS_PER_DELIVERY_BASE,
+                                LogisticsConfig.MAX_NUMBER_OF_DELIVERY_AREAS_PER_DELIVERY_BASE ) )
                         .relationship( dsm.relationshipSpecification( "DELIVERY_ROUTE",
                                 new IntervalProperty( 3 ),
                                 costProperty ) )
@@ -90,27 +84,17 @@ public class BuildLogisticsGraph
         deliveryAreas.createRelationshipsTo(
                 create( deliverySegmentSpec )
                         .numberOfTargetNodes( minMax(
-                                Logistics.MIN_NUMBER_OF_DELIVERY_SEGMENTS_PER_DELIVERY_AREA,
-                                Logistics.MAX_NUMBER_OF_DELIVERY_SEGMENTS_PER_DELIVERY_AREA ) )
+                                LogisticsConfig.MIN_NUMBER_OF_DELIVERY_SEGMENTS_PER_DELIVERY_AREA,
+                                LogisticsConfig.MAX_NUMBER_OF_DELIVERY_SEGMENTS_PER_DELIVERY_AREA ) )
                         .relationship( dsm.relationshipSpecification( "DELIVERY_ROUTE",
                                 new IntervalProperty( 3 ),
                                 costProperty ) )
                         .relationshipConstraints( exactly( 3 ) ) )
                 .updateNoReturn( dataset, 1000 );
 
-
-        //Link every parcel centre to every other parcel centre
-//        parcelCentres.createRelationshipsTo( getExisting( parcelCentres )
-//                .numberOfNodes( parcelCentres.size() )
-//                .relationship( dsm.relationshipSpecification( "CONNECTED_TO",
-//                        new IntervalProperty( 1 ), costProperty ) )
-//                .relationshipConstraints( RelationshipUniqueness.SINGLE_DIRECTION ) )
-//                .updateNoReturn( dataset );
-
-
         dataset.end();
 
-        GraphStatistics.create( db, Logistics.TITLE )
+        GraphStatistics.create( db, LogisticsConfig.TITLE )
                 .describeTo( new AsciiDocFormatter( SysOutLog.INSTANCE ) );
 
         db.shutdown();
@@ -120,7 +104,7 @@ public class BuildLogisticsGraph
     private static class IntervalProperty extends Property
     {
         private final int numberOfIntervals;
-        private final SevenDays sevenDays = new SevenDays( Logistics.START_DATE );
+        private final SevenDays sevenDays = new SevenDays( LogisticsConfig.START_DATE );
 
         private Iterator<Interval> intervals;
         private int counter;
@@ -149,7 +133,7 @@ public class BuildLogisticsGraph
             }
             catch ( NoSuchElementException e )
             {
-                throw new InvalidStateException( String.format( "counter: %s, numberOfIntervals: %s, iteration: %s",
+                throw new IllegalStateException( String.format( "counter: %s, numberOfIntervals: %s, iteration: %s",
                         counter, numberOfIntervals, iteration ) );
             }
         }

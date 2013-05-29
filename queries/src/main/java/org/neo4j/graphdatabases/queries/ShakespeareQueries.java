@@ -5,17 +5,13 @@ import java.util.Map;
 
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdatabases.queries.helpers.ExecutionEngineWrapper;
-import org.neo4j.graphdb.GraphDatabaseService;
 
 public class ShakespeareQueries
 {
-    private final GraphDatabaseService db;
     private final ExecutionEngineWrapper executionEngineWrapper;
 
-
-    public ShakespeareQueries( GraphDatabaseService db, ExecutionEngineWrapper executionEngineWrapper )
+    public ShakespeareQueries( ExecutionEngineWrapper executionEngineWrapper )
     {
-        this.db = db;
         this.executionEngineWrapper = executionEngineWrapper;
     }
 
@@ -25,7 +21,7 @@ public class ShakespeareQueries
                 "START theater=node:venue(name='Theatre Royal'), \n" +
                         "      newcastle=node:city(name='Newcastle'), \n" +
                         "      bard=node:author(lastname='Shakespeare')\n" +
-                        "RETURN theater, newcastle, bard";
+                        "RETURN theater.name AS theater, newcastle.name AS city, bard.lastname AS bard";
 
         Map<String, Object> params = new HashMap<String, Object>();
 

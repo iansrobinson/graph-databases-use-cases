@@ -1,9 +1,5 @@
 package org.neo4j.graphdatabases.queries;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.neo4j.graphdatabases.queries.helpers.Db.createFromCypher;
-
 import java.util.Iterator;
 import java.util.Map;
 
@@ -12,10 +8,18 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdatabases.queries.helpers.PrintingExecutionEngineWrapper;
 import org.neo4j.graphdatabases.queries.testing.IndexParam;
 import org.neo4j.graphdb.GraphDatabaseService;
+
+import static java.util.Arrays.asList;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import static org.neo4j.graphdatabases.queries.helpers.Db.createFromCypher;
 
 public class ShakespeareQueriesTest
 {
@@ -29,7 +33,7 @@ public class ShakespeareQueriesTest
     public static void init()
     {
         db = createDatabase();
-        queries = new ShakespeareQueries( db, new PrintingExecutionEngineWrapper( db, "shakespeare", name ) );
+        queries = new ShakespeareQueries( new PrintingExecutionEngineWrapper( db, "shakespeare", name ) );
     }
 
 
@@ -42,18 +46,29 @@ public class ShakespeareQueriesTest
     @Test
     public void theatreCityBard() throws Exception
     {
-        ExecutionResult result = queries.theatreCityBard();
+        ExecutionResult results = queries.theatreCityBard();
 
-        System.out.println( result.dumpToString() );
+        Iterator<Map<String, Object>> iterator = results.iterator();
+        Map<String, Object> result = iterator.next();
+
+        assertEquals( "Theatre Royal", result.get( "theater" ) );
+        assertEquals( "Newcastle", result.get( "city" ) );
+        assertEquals( "Shakespeare", result.get( "bard" ) );
+
+        assertFalse( iterator.hasNext() );
     }
 
     @Test
-        public void exampleOfWith() throws Exception
-        {
-            ExecutionResult result = queries.exampleOfWith();
+    public void exampleOfWith() throws Exception
+    {
+        ExecutionResult results = queries.exampleOfWith();
 
-            System.out.println( result.dumpToString() );
-        }
+        Iterator<Map<String, Object>> iterator = results.iterator();
+        Map<String, Object> result = iterator.next();
+
+        assertEquals( asList( "The Tempest", "Julius Caesar" ), result.get( "plays" ) );
+        assertFalse( iterator.hasNext() );
+    }
 
     @Test
     public void shouldReturnAllPlays() throws Exception

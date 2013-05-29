@@ -1,11 +1,5 @@
 package org.neo4j.graphdatabases.performance_tests;
 
-import static org.neo4j.graphdatabases.performance_tests.testing.DoNothingWithTestResults.doNothing;
-import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResults.printResults;
-import static org.neo4j.graphdatabases.performance_tests.testing.TakeXTestResults.take;
-import static org.neo4j.neode.Range.minMax;
-import static org.neo4j.neode.probabilities.ProbabilityDistribution.flatDistribution;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -19,10 +13,10 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
-import org.neo4j.graphdatabases.AccessControlNoAttributes;
-import org.neo4j.graphdatabases.SocialNetwork;
+import org.neo4j.graphdatabases.SocialNetworkConfig;
 import org.neo4j.graphdatabases.performance_tests.testing.DefaultExecutionEngineWrapper;
 import org.neo4j.graphdatabases.performance_tests.testing.MultipleTestRuns;
 import org.neo4j.graphdatabases.performance_tests.testing.ParamsGenerator;
@@ -31,14 +25,18 @@ import org.neo4j.graphdatabases.performance_tests.testing.ResultsContainSameElem
 import org.neo4j.graphdatabases.performance_tests.testing.SingleTest;
 import org.neo4j.graphdatabases.performance_tests.testing.SysOutWriter;
 import org.neo4j.graphdatabases.queries.SocialNetworkQueries;
+import org.neo4j.graphdatabases.queries.helpers.DbUtils;
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
 
-@Ignore
-public class SocialNetworkPerformanceTest
+import static org.neo4j.graphdatabases.performance_tests.testing.DoNothingWithTestResults.doNothing;
+import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResults.printResults;
+import static org.neo4j.graphdatabases.performance_tests.testing.TakeXTestResults.take;
+import static org.neo4j.neode.Range.minMax;
+import static org.neo4j.neode.probabilities.ProbabilityDistribution.flatDistribution;
+
+public class SocialNetwork
 {
     public static final int NUMBER_OF_RESULTS = 5;
     public static final int NUMBER_OF_TEST_RUNS = 100;
@@ -55,33 +53,12 @@ public class SocialNetworkPerformanceTest
     @BeforeClass
     public static void init()
     {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put( "dump_configuration", "true" );
-        params.put( "cache_type", "gcr" );
-
-        try
-        {
-            db = new GraphDatabaseFactory()
-                                .newEmbeddedDatabaseBuilder( SocialNetwork.STORE_DIR )
-                                .setConfig( params )
-                                .newGraphDatabase();
-        }
-        catch ( Exception e )
-        {
-            writer.writeln( "Error in init(): " + e.getMessage() );
-            e.printStackTrace();
-        }
+        db = DbUtils.existingDB( SocialNetworkConfig.STORE_DIR );
 
         queries = new SocialNetworkQueries( db, new DefaultExecutionEngineWrapper( db ) );
         multipleTestRuns = new MultipleTestRuns( NUMBER_OF_TEST_RUNS, writer );
 
         random = new Random();
-
-        //warmCache( db, writer);
-//
-//        GraphStatistics.create( db, SocialNetwork.TITLE )
-//                .describeTo( new AsciiDocFormatter( SysOutLog.INSTANCE ) );
-
     }
 
     @AfterClass
@@ -396,7 +373,8 @@ public class SocialNetworkPerformanceTest
             public final Map<String, String> generateParams()
             {
 
-                List<Integer> topicIds = flatDistribution().generateList( 5, minMax( 1, SocialNetwork.NUMBER_TOPICS ) );
+                List<Integer> topicIds = flatDistribution().generateList( 5, minMax( 1,
+                        SocialNetworkConfig.NUMBER_TOPICS ) );
 
                 Map<String, String> params = new HashMap<String, String>();
                 for ( String key : keys )
@@ -404,7 +382,7 @@ public class SocialNetworkPerformanceTest
                     if ( key.equals( "user" ) )
                     {
                         params.put( "user", String.format( "user-%s",
-                                random.nextInt( SocialNetwork.NUMBER_USERS ) + 1 ) );
+                                random.nextInt( SocialNetworkConfig.NUMBER_USERS ) + 1 ) );
                     }
                     if ( key.equals( "topic1" ) )
                     {

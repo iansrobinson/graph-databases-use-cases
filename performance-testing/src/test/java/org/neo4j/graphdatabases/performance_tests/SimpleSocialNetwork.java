@@ -1,30 +1,29 @@
 package org.neo4j.graphdatabases.performance_tests;
 
-import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResults.printResults;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+
 import org.neo4j.cypher.javacompat.ExecutionResult;
-import org.neo4j.graphdatabases.SimpleSocialNetwork;
+import org.neo4j.graphdatabases.SimpleSocialNetworkConfig;
 import org.neo4j.graphdatabases.performance_tests.testing.MultipleTestRuns;
 import org.neo4j.graphdatabases.performance_tests.testing.ParamsGenerator;
 import org.neo4j.graphdatabases.performance_tests.testing.SingleTest;
 import org.neo4j.graphdatabases.performance_tests.testing.SysOutWriter;
 import org.neo4j.graphdatabases.queries.SimpleSocialNetworkQueries;
+import org.neo4j.graphdatabases.queries.helpers.DbUtils;
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
 import org.neo4j.graphdatabases.queries.traversals.FriendOfAFriendDepth4;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
-@Ignore
-public class SimpleSocialNetworkPerformanceTest
+import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResults.printResults;
+
+public class SimpleSocialNetwork
 {
     private static GraphDatabaseService db;
     private static SimpleSocialNetworkQueries queries;
@@ -32,19 +31,13 @@ public class SimpleSocialNetworkPerformanceTest
     private static Random random;
     private static TestOutputWriter writer = SysOutWriter.INSTANCE;
 
-    public static final int NUMBER_OF_TEST_RUNS = 10;
+    public static final int NUMBER_OF_TEST_RUNS = 100;
 
     @BeforeClass
     public static void init()
     {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put( "dump_configuration", "true" );
-        params.put( "cache_type", "gcr" );
+        db = DbUtils.existingDB( SimpleSocialNetworkConfig.STORE_DIR );
 
-        db = new GraphDatabaseFactory()
-                            .newEmbeddedDatabaseBuilder( SimpleSocialNetwork.STORE_DIR )
-                            .setConfig( params )
-                            .newGraphDatabase();
         queries = new SimpleSocialNetworkQueries( db );
         multipleTestRuns = new MultipleTestRuns( NUMBER_OF_TEST_RUNS, writer );
 
@@ -132,9 +125,11 @@ public class SimpleSocialNetworkPerformanceTest
             public Map<String, String> generateParams()
             {
                 Map<String, String> params = new HashMap<String, String>();
-                params.put( "first-user", String.format( "user-%s", random.nextInt( SimpleSocialNetwork.NUMBER_USERS
+                params.put( "first-user", String.format( "user-%s", random.nextInt( SimpleSocialNetworkConfig
+                        .NUMBER_USERS
                 ) + 1 ) );
-                params.put( "second-user", String.format( "user-%s", random.nextInt( SimpleSocialNetwork.NUMBER_USERS
+                params.put( "second-user", String.format( "user-%s", random.nextInt( SimpleSocialNetworkConfig
+                        .NUMBER_USERS
                 ) + 1 ) );
                 return params;
             }

@@ -10,12 +10,38 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>neode</module>
-    <module>configuration</module>
-    <module>data-generation</module>
-    <module>performance-testing</module>
     <module>queries</module>
   </modules>
+
+  <profiles>
+    <profile>
+      <id>build-data</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+        <property>
+          <name>buildData</name>
+        </property>
+      </activation>
+      <modules>
+        <module>neode</module>
+        <module>configuration</module>
+        <module>data-generation</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>run-perf-tests</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+        <property>
+          <name>runPerfTests</name>
+        </property>
+      </activation>
+      <modules>
+        <module>configuration</module>
+        <module>performance-testing</module>
+      </modules>
+    </profile>
+  </profiles>
 
   <build>
     <plugins>

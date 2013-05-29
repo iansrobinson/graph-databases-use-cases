@@ -51,10 +51,10 @@
       <version>1.17</version>
     </dependency>
     <dependency>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-servlet</artifactId>
-          <version>1.17</version>
-        </dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-servlet</artifactId>
+      <version>1.17</version>
+    </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-client</artifactId>
@@ -70,23 +70,6 @@
       <artifactId>jetty</artifactId>
       <version>6.1.25</version>
     </dependency>
-
-
-    <!--<dependency>
-      <groupId>com.tinkerpop.blueprints</groupId>
-      <artifactId>blueprints-neo4j-graph</artifactId>
-      <version>2.1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.tinkerpop.gremlin</groupId>
-      <artifactId>gremlin-java</artifactId>
-      <version>2.1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.tinkerpop.gremlin</groupId>
-      <artifactId>gremlin-groovy</artifactId>
-      <version>2.1.0</version>
-    </dependency>-->
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
