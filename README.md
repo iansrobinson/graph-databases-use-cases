@@ -8,15 +8,15 @@ Setup
 
 This repository contains a submodule, _neode_, which is used to build the performance datasets. After cloning the repository, you will need to initialize the submodule:
 
-   git submodule init
+    git submodule init
 
 and then:
 
-   git submodule update
+    git submodule update
 
 To run the use case queries:
 
-   mvn clean install
+    mvn clean install
 
 Overview
 --------
@@ -26,29 +26,28 @@ Queries are developed in a test-driven fashion against small, well-known represe
 The project contains 3 modules (in addition to the _neode_ submodule):
 
 *  _queries_
-   Use case queries and the unit tests used to develop the queries.
+
+   Contains the use case queries and the unit tests used to develop the queries.
 * _dataset_builders_
+
    Builds larger, randomly-generated sample datasets.
 * _performance_tests_
+
    Runs the queries against the large sample datasets.
 
 Running the Performance Tests
 -----------------------------
 
-We recommend increasing the JVM heap size before building the sample datasets:
-
-   export MAVEN_OPTS=-Xmx2g
-
 Before you run the performance tests you will need to generate sample datasets. To create a sample dataset run:
 
-   mvn clean install -pl data-generation -DbuildData -DargLine="-Xms2g -Xmx2g" -Dtest=AccessControl|Logistics|SocialNetwork
+    mvn clean install -pl data-generation -DbuildData -DargLine="-Xms2g -Xmx2g" -Dtest=AccessControl|Logistics|SocialNetwork
 
 For example, to generate a sample dataset for the Logistics queries, run:
 
-   mvn clean install -pl data-generation -DbuildData -DargLine="-Xms2g -Xmx2g" -Dtest=Logistics
+    mvn clean install -pl data-generation -DbuildData -DargLine="-Xms2g -Xmx2g" -Dtest=Logistics
 
 *WARNING:* Building the sample datasets takes a long time (several tens of minutes in some cases).
 
 To execute the performance tests against a sample dataset, run:
 
-   mvn clean install -pl performance-testing -DrunPerfTests -DargLine="-Xms2g -Xmx2g" -Dtest=AccessControl|Logistics|SocialNetwork
+    mvn clean install -pl performance-testing -DrunPerfTests -DargLine="-Xms2g -Xmx2g" -Dtest=AccessControl|Logistics|SocialNetwork
