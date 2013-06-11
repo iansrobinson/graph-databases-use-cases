@@ -1,4 +1,6 @@
 datasets/
+examples/
+datasets-old/
 .DS_Store
 build
 target

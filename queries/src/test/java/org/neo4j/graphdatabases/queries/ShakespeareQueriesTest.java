@@ -10,16 +10,22 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 
 import org.neo4j.cypher.javacompat.ExecutionResult;
+import org.neo4j.graphdatabases.queries.helpers.Db;
 import org.neo4j.graphdatabases.queries.helpers.PrintingExecutionEngineWrapper;
 import org.neo4j.graphdatabases.queries.testing.IndexParam;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.index.Index;
 
 import static java.util.Arrays.asList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import static org.neo4j.graphdatabases.queries.helpers.Db.createFromCypher;
+import static org.neo4j.graphdatabases.queries.helpers.Db.createFromCypherWithAutoIndexing;
+import static org.neo4j.graphdb.DynamicRelationshipType.withName;
 
 public class ShakespeareQueriesTest
 {
@@ -27,27 +33,39 @@ public class ShakespeareQueriesTest
     public static TestName name = new TestName();
 
     private static GraphDatabaseService db;
+    private static GraphDatabaseService dbUsingCoreApi;
     private static ShakespeareQueries queries;
+    private static ShakespeareQueries queries2;
+    private static ShakespeareQueriesUsingAutoIndexes queriesUsingAutoIndexes;
 
     @BeforeClass
     public static void init()
     {
         db = createDatabase();
+        dbUsingCoreApi = createDatabaseUsingCoreApi();
         queries = new ShakespeareQueries( new PrintingExecutionEngineWrapper( db, "shakespeare", name ) );
+        queries2 = new ShakespeareQueries( new PrintingExecutionEngineWrapper( dbUsingCoreApi, "shakespeare", name ) );
+        queriesUsingAutoIndexes = new ShakespeareQueriesUsingAutoIndexes(
+                new PrintingExecutionEngineWrapper( db, "shakespeare-auot-indexes", name ) );
     }
-
 
     @AfterClass
     public static void shutdown()
     {
         db.shutdown();
+        dbUsingCoreApi.shutdown();
     }
 
     @Test
     public void theatreCityBard() throws Exception
     {
-        ExecutionResult results = queries.theatreCityBard();
+        assertTheatreCityBard( queries.theatreCityBard() );
+        assertTheatreCityBard( queries2.theatreCityBard() );
+        assertTheatreCityBard( queriesUsingAutoIndexes.theatreCityBard() );
+    }
 
+    private void assertTheatreCityBard( ExecutionResult results )
+    {
         Iterator<Map<String, Object>> iterator = results.iterator();
         Map<String, Object> result = iterator.next();
 
@@ -61,8 +79,13 @@ public class ShakespeareQueriesTest
     @Test
     public void exampleOfWith() throws Exception
     {
-        ExecutionResult results = queries.exampleOfWith();
+        assertExampleOfWith( queries.exampleOfWith() );
+        assertExampleOfWith( queries2.exampleOfWith() );
+        assertExampleOfWith( queriesUsingAutoIndexes.exampleOfWith() );
+    }
 
+    private void assertExampleOfWith( ExecutionResult results )
+    {
         Iterator<Map<String, Object>> iterator = results.iterator();
         Map<String, Object> result = iterator.next();
 
@@ -73,34 +96,46 @@ public class ShakespeareQueriesTest
     @Test
     public void shouldReturnAllPlays() throws Exception
     {
-        ExecutionResult result = queries.allPlays();
+        assertAllPlays( queries.allPlays() );
+        assertAllPlays( queries2.allPlays() );
+        assertAllPlays( queriesUsingAutoIndexes.allPlays() );
+    }
 
+    private void assertAllPlays( ExecutionResult result )
+    {
         Iterator<String> plays = result.columnAs( "play" );
 
         assertEquals( "Julius Caesar", plays.next() );
         assertEquals( "The Tempest", plays.next() );
         assertFalse( plays.hasNext() );
-
     }
 
     @Test
     public void shouldReturnLatePeriodPlays() throws Exception
     {
-        ExecutionResult result = queries.latePeriodPlays();
+        assertLatePeriodPlays( queries.latePeriodPlays() );
+        assertLatePeriodPlays( queries2.latePeriodPlays() );
+        assertLatePeriodPlays( queriesUsingAutoIndexes.latePeriodPlays() );
+    }
 
-
+    private void assertLatePeriodPlays( ExecutionResult result )
+    {
         Iterator<String> plays = result.columnAs( "play" );
 
         assertEquals( "The Tempest", plays.next() );
         assertFalse( plays.hasNext() );
-
     }
 
     @Test
     public void orderedByPerformance() throws Exception
     {
-        ExecutionResult result = queries.orderedByPerformance();
+        assertOrderedByPerformance( queries.orderedByPerformance() );
+        assertOrderedByPerformance( queries2.orderedByPerformance() );
+        assertOrderedByPerformance( queriesUsingAutoIndexes.orderedByPerformance() );
+    }
 
+    private void assertOrderedByPerformance( ExecutionResult result )
+    {
         Iterator<Map<String, Object>> plays = result.iterator();
 
         Map<String, Object> row = plays.next();
@@ -112,7 +147,6 @@ public class ShakespeareQueriesTest
         assertEquals( 1L, row.get( "performance_count" ) );
 
         assertFalse( plays.hasNext() );
-
     }
 
     private static GraphDatabaseService createDatabase()
@@ -156,12 +190,118 @@ public class ShakespeareQueriesTest
                 "       (rsc)-[:BASED_IN]->(stratford),\n" +
                 "       (shakespeare)-[:BORN_IN]->stratford";
 
-        return createFromCypher(
+        return createFromCypherWithAutoIndexing(
                 "Shakespeare",
                 cypher,
                 IndexParam.indexParam( "venue", "name" ),
                 IndexParam.indexParam( "author", "lastname" ),
                 IndexParam.indexParam( "city", "name" ) );
     }
+
+    private static GraphDatabaseService createDatabaseUsingCoreApi()
+    {
+        GraphDatabaseService db = Db.tempDb();
+
+        Index<Node> venueIndex = db.index().forNodes( "venue" );
+        Index<Node> cityIndex = db.index().forNodes( "city" );
+        Index<Node> authorIndex = db.index().forNodes( "author" );
+
+
+        Transaction tx = db.beginTx();
+        try
+        {
+            Node shakespeare = db.createNode();
+            shakespeare.setProperty( "firstname", "William" );
+            shakespeare.setProperty( "lastname", "Shakespeare" );
+            authorIndex.add( shakespeare, "lastname", shakespeare.getProperty( "lastname" ) );
+
+            Node juliusCaesar = db.createNode();
+            juliusCaesar.setProperty( "title", "Julius Caesar" );
+
+            Relationship wrote_play_jc = shakespeare.createRelationshipTo( juliusCaesar, withName( "WROTE_PLAY" ) );
+            wrote_play_jc.setProperty( "year", 1599 );
+
+            Node tempest = db.createNode();
+            tempest.setProperty( "title", "The Tempest" );
+
+            Relationship wrote_play_t = shakespeare.createRelationshipTo( tempest, withName( "WROTE_PLAY" ) );
+            wrote_play_t.setProperty( "year", 1610 );
+
+            Node rsc = db.createNode();
+            rsc.setProperty("name", "RSC");
+
+            Node production1 = db.createNode();
+            production1.setProperty("name", "Julius Caesar");
+
+            rsc.createRelationshipTo(production1, withName("PRODUCED"));
+            production1.createRelationshipTo(juliusCaesar, withName("PRODUCTION_OF"));
+
+            Node performance1 = db.createNode();
+            performance1.setProperty("date", 20120729 );
+            performance1.createRelationshipTo(production1, withName("PERFORMANCE_OF"));
+
+            Node production2 = db.createNode();
+            production2.setProperty("name", "The Tempest");
+            production2.createRelationshipTo(tempest, withName("PRODUCTION_OF"));
+            rsc.createRelationshipTo(production2, withName("PRODUCED"));
+
+            Node performance2 = db.createNode();
+            performance2.setProperty("date",20061121 );
+            performance2.createRelationshipTo(production2, withName("PERFORMANCE_OF"));
+
+            Node performance3 = db.createNode();
+            performance3.setProperty("date",20120730 );
+            performance3.createRelationshipTo(production1, withName("PERFORMANCE_OF"));
+
+            Node billy = db.createNode();
+            billy.setProperty("name", "Billy");
+
+            Node review = db.createNode();
+            review.setProperty("rating", 5);
+            review.setProperty("review", "This was awesome!");
+            review.createRelationshipTo(performance1, withName("RATED"));
+            billy.createRelationshipTo(review, withName("WROTE_REVIEW"));
+
+            Node theatreRoyal = db.createNode();
+            theatreRoyal.setProperty("name", "Theatre Royal");
+            venueIndex.add( theatreRoyal, "name", theatreRoyal.getProperty( "name" ) );
+
+            performance1.createRelationshipTo(theatreRoyal, withName("VENUE"));
+            performance2.createRelationshipTo(theatreRoyal, withName("VENUE"));
+            performance3.createRelationshipTo(theatreRoyal, withName("VENUE"));
+
+            Node greyStreet = db.createNode();
+            greyStreet.setProperty("name", "Grey Street");
+            theatreRoyal.createRelationshipTo(greyStreet, withName("STREET"));
+
+            Node newcastle = db.createNode();
+            newcastle.setProperty("name", "Newcastle");
+            cityIndex.add( newcastle, "name", newcastle.getProperty( "name" ) );
+            greyStreet.createRelationshipTo(newcastle, withName("CITY"));
+
+            Node tyneAndWear = db.createNode();
+            tyneAndWear.setProperty("name", "Tyne and Wear");
+            newcastle.createRelationshipTo(tyneAndWear, withName("COUNTY"));
+
+            Node england = db.createNode();
+            england.setProperty("name", "England");
+            tyneAndWear.createRelationshipTo(england, withName("COUNTRY"));
+
+            Node stratford = db.createNode();
+            stratford.setProperty("name", "Stratford upon Avon");
+            stratford.createRelationshipTo(england, withName("COUNTRY"));
+            rsc.createRelationshipTo(stratford, withName("BASED_IN"));
+            shakespeare.createRelationshipTo(stratford, withName("BORN_IN"));
+
+            tx.success();
+        }
+        finally
+        {
+            tx.finish();
+        }
+
+        return db;
+    }
+
 
 }

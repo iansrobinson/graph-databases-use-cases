@@ -10,8 +10,10 @@ import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdatabases.queries.testing.IndexParam;
 import org.neo4j.graphdatabases.queries.testing.IndexParams;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.index.AutoIndexer;
 import org.neo4j.test.AsciiDocGenerator;
 import org.neo4j.test.TestGraphDatabaseFactory;
 import org.neo4j.visualization.asciidoc.AsciidocHelper;
@@ -38,6 +40,21 @@ public final class Db
     public static GraphDatabaseService createFromCypher( String name, String cypher, IndexParam... indexParams )
     {
         GraphDatabaseService db = Db.impermanentDb();
+
+        return createFromCypher( db, name, cypher, indexParams );
+    }
+
+    public static GraphDatabaseService createFromCypherWithAutoIndexing( String name, String cypher,
+                                                                         IndexParam... indexParams )
+    {
+        GraphDatabaseService db = Db.impermanentDb();
+
+        AutoIndexer<Node> nodeAutoIndexer = db.index().getNodeAutoIndexer();
+        for ( IndexParam indexParam : indexParams )
+        {
+            nodeAutoIndexer.startAutoIndexingProperty( indexParam.propertyName() );
+        }
+        nodeAutoIndexer.setEnabled( true );
 
         return createFromCypher( db, name, cypher, indexParams );
     }

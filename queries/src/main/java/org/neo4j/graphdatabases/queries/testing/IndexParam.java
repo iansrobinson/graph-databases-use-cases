@@ -38,6 +38,11 @@ public class IndexParam
         return nodeLabel;
     }
 
+    public String propertyName()
+    {
+        return propertyName;
+    }
+
     public void indexNode( Node node, GraphDatabaseService db )
     {
         db.index().forNodes( indexName ).add( node, indexKey, node.getProperty( propertyName ) );
