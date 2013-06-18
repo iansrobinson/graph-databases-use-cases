@@ -39,7 +39,7 @@ import static org.neo4j.neode.probabilities.ProbabilityDistribution.flatDistribu
 public class SocialNetwork
 {
     public static final int NUMBER_OF_RESULTS = 5;
-    public static final int NUMBER_OF_TEST_RUNS = 100;
+    public static final int NUMBER_OF_TEST_RUNS = 20;
 
     private static GraphDatabaseService db;
     private static SocialNetworkQueries queries;

@@ -26,7 +26,7 @@ import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResult
 
 public class AccessControlWithRelationshipProperties
 {
-    private static final int NUMBER_OF_TEST_RUNS = 100;
+    private static final int NUMBER_OF_TEST_RUNS = 20;
     private static final int NUMBER_OF_RESULTS = 15;
 
     private static int numberOfAccounts;

@@ -31,7 +31,7 @@ import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResult
 
 public class Logistics
 {
-    public static final int NUMBER_OF_TEST_RUNS = 100;
+    public static final int NUMBER_OF_TEST_RUNS = 20;
     private static final int NUMBER_OF_RESULTS = 15;
 
     private static GraphDatabaseService db;

@@ -31,7 +31,7 @@ public class SimpleSocialNetwork
     private static Random random;
     private static TestOutputWriter writer = SysOutWriter.INSTANCE;
 
-    public static final int NUMBER_OF_TEST_RUNS = 100;
+    public static final int NUMBER_OF_TEST_RUNS = 20;
 
     @BeforeClass
     public static void init()
