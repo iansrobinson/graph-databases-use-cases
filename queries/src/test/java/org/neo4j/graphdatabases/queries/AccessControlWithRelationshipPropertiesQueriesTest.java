@@ -12,10 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TestName;
 import org.neo4j.graphdatabases.queries.helpers.PrintingExecutionEngineWrapper;
 import org.neo4j.graphdatabases.queries.helpers.QueryUnionExecutionResult;
@@ -27,20 +24,20 @@ import org.neo4j.graphdb.Path;
 public class AccessControlWithRelationshipPropertiesQueriesTest
 {
     @Rule
-    public static TestName name = new TestName();
+    public TestName name = new TestName();
 
-    private static GraphDatabaseService db;
-    private static AccessControlWithRelationshipPropertiesQueries queries;
+    private GraphDatabaseService db;
+    private AccessControlWithRelationshipPropertiesQueries queries;
 
-    @BeforeClass
-    public static void init()
+    @Before
+    public  void init()
     {
         db = createDatabase();
         queries = new AccessControlWithRelationshipPropertiesQueries( new PrintingExecutionEngineWrapper( db, "access-control", name ) );
     }
 
-    @AfterClass
-    public static void shutdown()
+    @After
+    public void shutdown()
     {
         db.shutdown();
     }

@@ -24,10 +24,10 @@ import org.neo4j.graphdb.Node;
 public class SocialNetworkQueriesTest
 {
     @Rule
-    public static TestName name = new TestName();
+    public TestName name = new TestName();
 
-    private static GraphDatabaseService db;
-    private static SocialNetworkQueries queries;
+    private GraphDatabaseService db;
+    private SocialNetworkQueries queries;
 
     @Before
     public void init()

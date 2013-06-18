@@ -12,10 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TestName;
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdatabases.queries.helpers.PrintingExecutionEngineWrapper;
@@ -25,21 +22,21 @@ import org.neo4j.graphdb.GraphDatabaseService;
 public class AccessControlQueriesTest
 {
     @Rule
-    public static TestName testName = new TestName();
+    public TestName testName = new TestName();
 
-    private static GraphDatabaseService db;
-    private static AccessControlQueries queries;
+    private GraphDatabaseService db;
+    private AccessControlQueries queries;
 
-    @BeforeClass
-    public static void init()
+    @Before
+    public void init()
     {
         db = createDatabase();
         queries = new AccessControlQueries( new PrintingExecutionEngineWrapper( db,
                 "access-control-revised", testName ) );
     }
 
-    @AfterClass
-    public static void shutdown()
+    @After
+    public void shutdown()
     {
         db.shutdown();
     }

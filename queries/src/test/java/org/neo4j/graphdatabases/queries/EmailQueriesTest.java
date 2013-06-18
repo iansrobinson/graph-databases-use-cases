@@ -22,7 +22,7 @@ import static org.neo4j.helpers.collection.IteratorUtil.count;
 public class EmailQueriesTest
 {
     @Rule
-    public static TestName name = new TestName();
+    public TestName name = new TestName();
 
     @Test
     public void suspectBehaviour() throws Exception

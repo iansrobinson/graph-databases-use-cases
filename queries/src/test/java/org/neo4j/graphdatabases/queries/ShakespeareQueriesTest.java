@@ -3,10 +3,7 @@ package org.neo4j.graphdatabases.queries;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TestName;
 
 import org.neo4j.cypher.javacompat.ExecutionResult;
@@ -30,16 +27,16 @@ import static org.neo4j.graphdb.DynamicRelationshipType.withName;
 public class ShakespeareQueriesTest
 {
     @Rule
-    public static TestName name = new TestName();
+    public TestName name = new TestName();
 
-    private static GraphDatabaseService db;
-    private static GraphDatabaseService dbUsingCoreApi;
-    private static ShakespeareQueries queries;
-    private static ShakespeareQueries queries2;
-    private static ShakespeareQueriesUsingAutoIndexes queriesUsingAutoIndexes;
+    private GraphDatabaseService db;
+    private GraphDatabaseService dbUsingCoreApi;
+    private ShakespeareQueries queries;
+    private ShakespeareQueries queries2;
+    private ShakespeareQueriesUsingAutoIndexes queriesUsingAutoIndexes;
 
-    @BeforeClass
-    public static void init()
+    @Before
+    public void init()
     {
         db = createDatabase();
         dbUsingCoreApi = createDatabaseUsingCoreApi();
@@ -49,8 +46,8 @@ public class ShakespeareQueriesTest
                 new PrintingExecutionEngineWrapper( db, "shakespeare-auot-indexes", name ) );
     }
 
-    @AfterClass
-    public static void shutdown()
+    @After
+    public void shutdown()
     {
         db.shutdown();
         dbUsingCoreApi.shutdown();

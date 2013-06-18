@@ -9,10 +9,7 @@ import java.util.Iterator;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TestName;
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdatabases.queries.helpers.PrintingExecutionEngineWrapper;
@@ -22,18 +19,18 @@ import org.neo4j.graphdb.Node;
 public class LogisticsQueriesTest
 {
     @Rule
-    public static TestName name = new TestName();
+    public TestName name = new TestName();
 
-    private static GraphDatabaseService db;
-    private static LogisticsQueries queries;
+    private GraphDatabaseService db;
+    private LogisticsQueries queries;
 
     private static Interval interval1 = Interval.parse( "2012-10-15T00:00:00.000+01:00/2012-10-22T00:00:00.000+01:00" );
     private static Interval interval2 = Interval.parse( "2012-10-22T00:00:00.000+01:00/2012-10-29T00:00:00.000+01:00" );
     private static Interval interval3 = Interval.parse( "2012-10-29T00:00:00.000+01:00/2012-11-05T00:00:00.000+01:00" );
 
 
-    @BeforeClass
-    public static void init()
+    @Before
+    public void init()
     {
         try
         {
@@ -47,8 +44,8 @@ public class LogisticsQueriesTest
         }
     }
 
-    @AfterClass
-    public static void shutdown()
+    @After
+    public void shutdown()
     {
         db.shutdown();
     }

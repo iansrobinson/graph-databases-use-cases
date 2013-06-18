@@ -6,12 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TestName;
 
 import org.neo4j.cypher.javacompat.ExecutionEngine;
@@ -41,17 +36,17 @@ public class SocialNetwork
     public static final int NUMBER_OF_RESULTS = 5;
     public static final int NUMBER_OF_TEST_RUNS = 20;
 
-    private static GraphDatabaseService db;
-    private static SocialNetworkQueries queries;
-    private static MultipleTestRuns multipleTestRuns;
-    private static Random random;
-    private static TestOutputWriter writer = SysOutWriter.INSTANCE;
+    private GraphDatabaseService db;
+    private SocialNetworkQueries queries;
+    private MultipleTestRuns multipleTestRuns;
+    private Random random;
+    private TestOutputWriter writer = SysOutWriter.INSTANCE;
 
     @Rule
-    public static TestName name = new TestName();
+    public TestName name = new TestName();
 
-    @BeforeClass
-    public static void init()
+    @Before
+    public void init()
     {
         db = DbUtils.existingDB( SocialNetworkConfig.STORE_DIR );
 
@@ -61,15 +56,10 @@ public class SocialNetwork
         random = new Random();
     }
 
-    @AfterClass
-    public static void teardown()
+    @After
+    public void teardown()
     {
         db.shutdown();
-    }
-
-    @After
-    public void flush()
-    {
         writer.flush();
     }
 
