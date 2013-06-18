@@ -38,16 +38,18 @@ The project contains 3 modules (in addition to the _neode_ submodule):
 Running the Performance Tests
 -----------------------------
 
+First, build the project as described in Setup.
+
 Before you run the performance tests you will need to generate sample datasets. To create a sample dataset run:
 
-    mvn clean install -pl data-generation -DbuildData -DargLine="-Xms2g -Xmx2g" -Dtest=AccessControl|Logistics|SocialNetwork
+    mvn test -pl data-generation -DargLine="-Xms2g -Xmx2g" -Dtest=AccessControl|Logistics|SocialNetwork
 
 For example, to generate a sample dataset for the Logistics queries, run:
 
-    mvn clean install -pl data-generation -DbuildData -DargLine="-Xms2g -Xmx2g" -Dtest=Logistics
+    mvn test -pl data-generation -DargLine="-Xms2g -Xmx2g" -Dtest=Logistics
 
 *WARNING:* Building the sample datasets takes a long time (several tens of minutes in some cases).
 
 To execute the performance tests against a sample dataset, run:
 
-    mvn clean install -pl performance-testing -DrunPerfTests -DargLine="-Xms2g -Xmx2g" -Dtest=AccessControl|Logistics|SocialNetwork
+    mvn test -pl performance-testing -DargLine="-Xms2g -Xmx2g" -Dtest=AccessControl|Logistics|SocialNetwork
