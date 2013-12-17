@@ -5,9 +5,6 @@ import static java.util.Arrays.asList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.neo4j.cypher.CypherParser;
-import scala.collection.immutable.List;
-
 public class QueryUnionExecutionEngine
 {
     private final ExecutionEngineWrapper executionEngine;
