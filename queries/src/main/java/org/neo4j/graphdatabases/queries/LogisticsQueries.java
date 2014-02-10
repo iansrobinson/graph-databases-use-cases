@@ -38,8 +38,8 @@ public class LogisticsQueries
     public ExecutionResult findShortestPathWithCypherReduce( String start, String end, Interval interval )
     {
         String query =
-                "START s=node:location(name={startLocation}),\n" +
-                "      e=node:location(name={endLocation})\n" +
+                "MATCH (s:Location {name:{startLocation}}),\n" +
+                "      (e:Location {name:{endLocation}})\n" +
                 "MATCH upLeg = (s)<-[:DELIVERY_ROUTE*1..2]-(db1)\n" +
                 "WHERE all(r in relationships(upLeg)\n" +
                 "          WHERE r.start_date <= {intervalStart}\n" +
@@ -55,7 +55,7 @@ public class LogisticsQueries
                 "          WHERE r.start_date <= {intervalStart}\n" +
                 "          AND r.end_date >= {intervalEnd})\n" +
                 "WITH  upLeg, downLeg, topRoute,\n" +
-                "      reduce(weight=0, r in relationships(topRoute) : weight+r.cost) AS score\n" +
+                "      reduce(weight=0, r in relationships(topRoute) | weight+r.cost) AS score\n" +
                 "      ORDER BY score ASC\n" +
                 "      LIMIT 1\n" +
                 "RETURN (nodes(upLeg) + tail(nodes(topRoute)) + tail(nodes(downLeg))) AS n";

@@ -56,7 +56,7 @@ public class SimpleSocialNetwork
         } );
 
         NodeSpecification userSpec = dsm.nodeSpecification(
-                "user", indexableProperty( "name" ) );
+                "User", indexableProperty( db, "User", "name" ) );
         RelationshipSpecification friend =
                 dsm.relationshipSpecification( "FRIEND" );
 

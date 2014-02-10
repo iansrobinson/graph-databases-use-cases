@@ -18,9 +18,9 @@ public class ShakespeareQueries
     public ExecutionResult theatreCityBard()
     {
         String query =
-                "START theater=node:venue(name='Theatre Royal'), \n" +
-                        "      newcastle=node:city(name='Newcastle'), \n" +
-                        "      bard=node:author(lastname='Shakespeare')\n" +
+                "MATCH (theater:Venue {name:'Theatre Royal'}), \n" +
+                        "      (newcastle:City {name:'Newcastle'}), \n" +
+                        "      (bard:Author {lastname:'Shakespeare'})\n" +
                         "RETURN theater.name AS theater, newcastle.name AS city, bard.lastname AS bard";
 
         Map<String, Object> params = new HashMap<String, Object>();
@@ -31,9 +31,9 @@ public class ShakespeareQueries
     public ExecutionResult allPlays()
     {
         String query =
-                "START theater=node:venue(name='Theatre Royal'), \n" +
-                        "      newcastle=node:city(name='Newcastle'), \n" +
-                        "      bard=node:author(lastname='Shakespeare')\n" +
+                "MATCH (theater:Venue {name:'Theatre Royal'}), \n" +
+                        "      (newcastle:City {name:'Newcastle'}), \n" +
+                        "      (bard:Author {lastname:'Shakespeare'})\n" +
                         "MATCH (newcastle)<-[:STREET|CITY*1..2]-(theater)\n" +
                         "      <-[:VENUE]-()-[:PERFORMANCE_OF]->()-[:PRODUCTION_OF]->\n" +
                         "      (play)<-[:WROTE_PLAY]-(bard)\n" +
@@ -47,9 +47,9 @@ public class ShakespeareQueries
     public ExecutionResult latePeriodPlays()
     {
         String query =
-                "START theater=node:venue(name='Theatre Royal'), \n" +
-                        "      newcastle=node:city(name='Newcastle'), \n" +
-                        "      bard=node:author(lastname='Shakespeare')\n" +
+                "MATCH (theater:Venue {name:'Theatre Royal'}), \n" +
+                        "      (newcastle:City {name:'Newcastle'}), \n" +
+                        "      (bard:Author {lastname:'Shakespeare'})\n" +
                         "MATCH (newcastle)<-[:STREET|CITY*1..2]-(theater)<-[:VENUE]-()-[:PERFORMANCE_OF]->()\n" +
                         "      -[:PRODUCTION_OF]->(play)<-[w:WROTE_PLAY]-(bard)\n" +
                         "WHERE w.year > 1608\n" +
@@ -63,9 +63,9 @@ public class ShakespeareQueries
     public ExecutionResult orderedByPerformance()
     {
         String query =
-                "START theater=node:venue(name='Theatre Royal'), \n" +
-                        "      newcastle=node:city(name='Newcastle'), \n" +
-                        "      bard=node:author(lastname='Shakespeare')\n" +
+                "MATCH (theater:Venue {name:'Theatre Royal'}), \n" +
+                        "      (newcastle:City {name:'Newcastle'}), \n" +
+                        "      (bard:Author {lastname:'Shakespeare'})\n" +
                         "MATCH (newcastle)<-[:STREET|CITY*1..2]-(theater)<-[:VENUE]-()-[p:PERFORMANCE_OF]->()\n" +
                         "      -[:PRODUCTION_OF]->(play)<-[:WROTE_PLAY]-(bard)\n" +
                         "RETURN   play.title AS play, count(p) AS performance_count \n" +
@@ -79,7 +79,7 @@ public class ShakespeareQueries
     public ExecutionResult exampleOfWith()
     {
         String query =
-                       "START bard=node:author(lastname='Shakespeare')\n" +
+                       "MATCH (bard:Author {lastname:'Shakespeare'})\n" +
                                "MATCH (bard)-[w:WROTE_PLAY]->(play)\n" +
                                "WITH play \n" +
                                "ORDER BY w.year DESC \n" +

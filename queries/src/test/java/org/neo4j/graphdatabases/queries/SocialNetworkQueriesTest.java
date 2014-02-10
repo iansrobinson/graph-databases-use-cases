@@ -20,6 +20,7 @@ import org.neo4j.graphdatabases.queries.helpers.PrintingExecutionEngineWrapper;
 import org.neo4j.graphdatabases.queries.testing.IndexParam;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 
 public class SocialNetworkQueriesTest
 {
@@ -135,13 +136,17 @@ public class SocialNetworkQueriesTest
     @Test
     public void friendOfAFriendWithInterestTraversalFramework() throws Exception
     {
-        // when
-        Collection<Node> results = queries.friendOfAFriendWithInterestTraversalFramework( "Arnold", "Art", 5 );
+        try ( Transaction tx = db.beginTx() )
+        {
+            // when
+            Collection<Node> results = queries.friendOfAFriendWithInterestTraversalFramework( "Arnold", "Art", 5 );
 
-        // then
-        Iterator<Node> iterator = results.iterator();
-        assertEquals( "Emily", iterator.next().getProperty( "name" ) );
-        assertFalse( iterator.hasNext() );
+            // then
+            Iterator<Node> iterator = results.iterator();
+            assertEquals( "Emily", iterator.next().getProperty( "name" ) );
+            assertFalse( iterator.hasNext() );
+            tx.success();
+        }
     }
 
     @Test
@@ -174,7 +179,7 @@ public class SocialNetworkQueriesTest
         assertEquals( "Emily", result.get( "name" ) );
         assertEquals( 2L, result.get( "score" ) );
         assertEquals( 2L, result.get( "distance" ) );
-        assertEquals( asList( "Design", "Art" ), result.get( "interests" ) );
+        assertEquals( asList( "Art", "Design" ), result.get( "interests" ) );
 
 
         assertFalse( iterator.hasNext() );
@@ -193,7 +198,7 @@ public class SocialNetworkQueriesTest
         assertEquals( "Arnold", result.get( "name" ) );
         assertEquals( 2L, result.get( "score" ) );
         assertEquals( 2L, result.get( "distance" ) );
-        assertEquals( asList( "Travel", "Java" ), result.get( "interests" ) );
+        assertEquals( asList( "Java", "Travel" ), result.get( "interests" ) );
 
         result = iterator.next();
         assertEquals( "Charlie", result.get( "name" ) );
@@ -209,8 +214,8 @@ public class SocialNetworkQueriesTest
     public void shouldCreateNewWorkedWithRelationships() throws Exception
     {
         // given
-        String cypher = "START sarah=node:user(name='Sarah'),\n" +
-                "ben=node:user(name='Ben')\n" +
+        String cypher = "MATCH (sarah:User {name:'Sarah'}),\n" +
+                " (ben:User {name:'Ben'})\n" +
                 "CREATE sarah-[:WORKED_WITH]->ben";
 
         createFromCypher( db, "Enriched Social Network", cypher );
@@ -266,29 +271,29 @@ public class SocialNetworkQueriesTest
     private static GraphDatabaseService createDatabase()
     {
         String cypher = "CREATE\n" +
-                "(ben {name:'Ben', _label:'user'}),\n" +
-                "(arnold {name:'Arnold', _label:'user'}),\n" +
-                "(charlie {name:'Charlie', _label:'user'}),\n" +
-                "(gordon {name:'Gordon', _label:'user'}),\n" +
-                "(lucy {name:'Lucy', _label:'user'}),\n" +
-                "(emily {name:'Emily', _label:'user'}),\n" +
-                "(sarah {name:'Sarah', _label:'user'}),\n" +
-                "(kate {name:'Kate', _label:'user'}),\n" +
-                "(acme {name:'Acme, Inc', _label:'company'}),\n" +
-                "(startup {name:'Startup, Ltd', _label:'company'}),\n" +
-                "(graphs {name:'Graphs', _label:'topic'}),\n" +
-                "(rest {name:'REST', _label:'topic'}),\n" +
-                "(art {name:'Art', _label:'topic'}),\n" +
-                "(design {name:'Design', _label:'topic'}),\n" +
-                "(medicine {name:'Medicine', _label:'topic'}),\n" +
-                "(drama {name:'Drama', _label:'topic'}),\n" +
-                "(java {name:'Java', _label:'topic'}),\n" +
-                "(music {name:'Music', _label:'topic'}),\n" +
-                "(cars {name:'Cars', _label:'topic'}),\n" +
-                "(travel {name:'Travel', _label:'topic'}),\n" +
-                "(phoenix {name:'Phoenix', _label:'project'}),\n" +
-                "(quantumLeap {name:'Quantum Leap', _label:'project'}),\n" +
-                "(nextGenPlatform {name:'Next Gen Platform', _label:'project'}),\n" +
+                "(ben:User {name:'Ben'}),\n" +
+                "(arnold:User {name:'Arnold'}),\n" +
+                "(charlie:User {name:'Charlie'}),\n" +
+                "(gordon:User {name:'Gordon'}),\n" +
+                "(lucy:User {name:'Lucy'}),\n" +
+                "(emily:User {name:'Emily'}),\n" +
+                "(sarah:User {name:'Sarah'}),\n" +
+                "(kate:User {name:'Kate'}),\n" +
+                "(acme:User {name:'Acme, Inc'}),\n" +
+                "(startup:Company {name:'Startup, Ltd'}),\n" +
+                "(graphs:Topic {name:'Graphs'}),\n" +
+                "(rest:Topic {name:'REST'}),\n" +
+                "(art:Topic {name:'Art'}),\n" +
+                "(design:Topic {name:'Design'}),\n" +
+                "(medicine:Topic {name:'Medicine'}),\n" +
+                "(drama:Topic {name:'Drama'}),\n" +
+                "(java:Topic {name:'Java'}),\n" +
+                "(music:Topic {name:'Music'}),\n" +
+                "(cars:Topic {name:'Cars'}),\n" +
+                "(travel:Topic {name:'Travel'}),\n" +
+                "(phoenix:Topic {name:'Phoenix'}),\n" +
+                "(quantumLeap:Topic {name:'Quantum Leap'}),\n" +
+                "(nextGenPlatform:Topic {name:'Next Gen Platform'}),\n" +
                 "ben-[:WORKS_FOR]->acme,\n" +
                 "charlie-[:WORKS_FOR]->acme,\n" +
                 "lucy-[:WORKS_FOR]->acme,\n" +
@@ -332,9 +337,9 @@ public class SocialNetworkQueriesTest
         return createFromCypher(
                 "Social Network",
                 cypher,
-                IndexParam.indexParam( "user", "name" ),
-                IndexParam.indexParam( "topic", "name" ),
-                IndexParam.indexParam( "project", "name" ) );
+                IndexParam.indexParam( "User", "name" ),
+                IndexParam.indexParam( "Topic", "name" ),
+                IndexParam.indexParam( "Project", "name" ) );
 
     }
 }

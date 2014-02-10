@@ -57,10 +57,10 @@ public class SocialNetwork
         Property projectDuration = new ProjectDurationProperty();
         Property durationOnProject = new DurationOnProjectProperty();
 
-        NodeSpecification userSpec = dsm.nodeSpecification( "user", indexableProperty( "name" ) );
-        NodeSpecification topicSpec = dsm.nodeSpecification( "topic", indexableProperty( "name" ) );
-        NodeSpecification companySpec = dsm.nodeSpecification( "company", indexableProperty( "name" ) );
-        NodeSpecification projectSpec = dsm.nodeSpecification( "project",
+        NodeSpecification userSpec = dsm.nodeSpecification( "User", indexableProperty(db, "User", "name" ) );
+        NodeSpecification topicSpec = dsm.nodeSpecification( "Topic", indexableProperty(db, "Topic", "name" ) );
+        NodeSpecification companySpec = dsm.nodeSpecification( "Company", indexableProperty(db, "company", "name" ) );
+        NodeSpecification projectSpec = dsm.nodeSpecification( "Project",
                 property( "name" ),
                 projectDuration );
 

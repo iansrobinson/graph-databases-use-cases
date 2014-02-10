@@ -49,13 +49,11 @@ public class AccessControl
                 .newGraphDatabase();
         DatasetManager dsm = new DatasetManager( db, SysOutLog.INSTANCE );
 
-        NodeSpecification adminSpec = dsm.nodeSpecification( "administrator", indexableProperty( "name" ) );
-        NodeSpecification groupSpec = dsm.nodeSpecification( "group", property( "name" ) );
-        NodeSpecification companySpec = dsm.nodeSpecification( "company", indexableProperty( "name" ) );
-        NodeSpecification customerSpec = dsm.nodeSpecification( "employee", indexableProperty( "name", "employee",
-                "resource" ) );
-        NodeSpecification accountSpec = dsm.nodeSpecification( "account", indexableProperty( "name", "account",
-                "resource" ) );
+        NodeSpecification adminSpec = dsm.nodeSpecification( "Administrator", indexableProperty( db, "Administrator", "name" ) );
+        NodeSpecification groupSpec = dsm.nodeSpecification( "Group", property( "name" ) );
+        NodeSpecification companySpec = dsm.nodeSpecification( "Company", indexableProperty( db, "Company", "name" ) );
+        NodeSpecification customerSpec = dsm.nodeSpecification( "Employee", indexableProperty( db, "Employee", "name", "Resource"));
+        NodeSpecification accountSpec = dsm.nodeSpecification( "Account", indexableProperty( db, "Account", "name", "Resource"));
 
         RelationshipSpecification member_of = dsm.relationshipSpecification( "MEMBER_OF" );
         RelationshipSpecification allowed_inherit = dsm.relationshipSpecification( "ALLOWED_INHERIT" );

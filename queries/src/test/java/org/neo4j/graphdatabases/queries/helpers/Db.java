@@ -65,7 +65,7 @@ public final class Db
         ExecutionEngine engine = new ExecutionEngine( db );
         engine.execute( cypher );
 
-        new IndexParams( indexParams ).index( db );
+        new IndexParams( indexParams ).index( db);
 
         printGraph( name, db );
 

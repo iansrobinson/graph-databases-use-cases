@@ -54,14 +54,8 @@ public class PrintingExecutionEngineWrapper implements ExecutionEngineWrapper
 
     private static void printFile( String fileName, String contents )
     {
-        PrintWriter writer = AsciiDocGenerator.getPrintWriter( "../examples", fileName );
-        try
-        {
-            writer.println( contents );
-        }
-        finally
-        {
-            writer.close();
+        try (PrintWriter writer = AsciiDocGenerator.getPrintWriter("../examples", fileName)) {
+            writer.println(contents);
         }
     }
 }

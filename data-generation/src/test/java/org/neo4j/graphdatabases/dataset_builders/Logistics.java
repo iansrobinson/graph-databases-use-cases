@@ -44,14 +44,14 @@ public class Logistics
                 .newGraphDatabase();
         DatasetManager dsm = new DatasetManager( db, SysOutLog.INSTANCE );
 
-        NodeSpecification parcelCentreSpec = dsm.nodeSpecification( "parcel-centre",
-                indexableProperty( "name", "location", "parcel-centre" ) );
-        NodeSpecification deliveryBaseSpec = dsm.nodeSpecification( "delivery-base",
-                indexableProperty( "name", "location", "delivery-base" ) );
-        NodeSpecification deliveryAreaSpec = dsm.nodeSpecification( "delivery-area",
-                indexableProperty( "name", "location", "delivery-area" ) );
-        NodeSpecification deliverySegmentSpec = dsm.nodeSpecification( "delivery-segment",
-                indexableProperty( "name", "location", "delivery-segment" ) );
+        NodeSpecification parcelCentreSpec = dsm.nodeSpecification( "ParcelCentre",
+                indexableProperty( db, "ParcelCentre", "name", "Location" ) );
+        NodeSpecification deliveryBaseSpec = dsm.nodeSpecification( "DeliveryBase",
+                indexableProperty( db, "DeliveryBase","name", "Location" ) );
+        NodeSpecification deliveryAreaSpec = dsm.nodeSpecification( "DeliveryArea",
+                indexableProperty( db, "DeliveryArea", "name", "Location" ) );
+        NodeSpecification deliverySegmentSpec = dsm.nodeSpecification( "DeliverySegment",
+                indexableProperty( db, "DeliverySegment", "name", "Location" ) );
 
         Property costProperty = new CostProperty();
 

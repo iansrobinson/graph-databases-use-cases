@@ -18,7 +18,7 @@ import org.junit.Test;
 import org.neo4j.graphdatabases.queries.testing.IndexParam;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.server.CommunityNeoServer;
-import org.neo4j.server.helpers.ServerBuilder;
+import org.neo4j.server.helpers.CommunityServerBuilder;
 
 public class SimpleSocialNetworkExtensionTest
 {
@@ -28,7 +28,7 @@ public class SimpleSocialNetworkExtensionTest
     @BeforeClass
     public static void init() throws IOException
     {
-        server = ServerBuilder.server()
+        server = CommunityServerBuilder.server()
                 .withThirdPartyJaxRsPackage(
                         "org.neo4j.graphdatabases.queries.server",
                         "/socnet" )
@@ -79,16 +79,16 @@ public class SimpleSocialNetworkExtensionTest
     private static GraphDatabaseService populateDatabase( GraphDatabaseService db )
     {
         String cypher = "CREATE\n" +
-                "(ben {name:'Ben', _label:'user'}),\n" +
-                "(arnold {name:'Arnold', _label:'user'}),\n" +
-                "(charlie {name:'Charlie', _label:'user'}),\n" +
-                "(gordon {name:'Gordon', _label:'user'}),\n" +
-                "(lucy {name:'Lucy', _label:'user'}),\n" +
-                "(emily {name:'Emily', _label:'user'}),\n" +
-                "(sarah {name:'Sarah', _label:'user'}),\n" +
-                "(kate {name:'Kate', _label:'user'}),\n" +
-                "(mike {name:'Mike', _label:'user'}),\n" +
-                "(paula {name:'Paula', _label:'user'}),\n" +
+                "(ben:User {name:'Ben'}),\n" +
+                "(arnold:User {name:'Arnold'}),\n" +
+                "(charlie:User {name:'Charlie'}),\n" +
+                "(gordon:User {name:'Gordon'}),\n" +
+                "(lucy:User {name:'Lucy'}),\n" +
+                "(emily:User {name:'Emily'}),\n" +
+                "(sarah:User {name:'Sarah'}),\n" +
+                "(kate:User {name:'Kate'}),\n" +
+                "(mike:User {name:'Mike'}),\n" +
+                "(paula:User {name:'Paula'}),\n" +
                 "ben-[:FRIEND]->charlie,\n" +
                 "charlie-[:FRIEND]->lucy,\n" +
                 "lucy-[:FRIEND]->sarah,\n" +
@@ -101,6 +101,6 @@ public class SimpleSocialNetworkExtensionTest
         return createFromCypher( db,
                 "Simple Social Network",
                 cypher,
-                IndexParam.indexParam( "user", "name" ) );
+                IndexParam.indexParam( "User", "name" ) );
     }
 }

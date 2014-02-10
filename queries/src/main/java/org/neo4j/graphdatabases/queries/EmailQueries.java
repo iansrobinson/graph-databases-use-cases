@@ -20,10 +20,10 @@ public class EmailQueries
 
     public ExecutionResult suspectBehaviour()
     {
-        String query = "START bob=node:user(username='Bob') \n" +
-                "MATCH (bob)-[:SENT]->(email)-[:CC]->(alias),\n" +
+        String query =
+                "MATCH (bob:User {username:'Bob'})-[:SENT]->(email)-[:CC]->(alias),\n" +
                 "      (alias)-[:ALIAS_OF]->(bob)\n" +
-                "RETURN email";
+                "RETURN email.id";
 
         Map<String, Object> params = new HashMap<String, Object>();
 
@@ -32,8 +32,8 @@ public class EmailQueries
 
     public ExecutionResult suspectBehaviour2()
     {
-        String query = "START email = node:email(id = '6')\n" +
-                "MATCH p=(email)<-[:REPLY_TO*1..4]-()<-[:SENT]-(replier)\n" +
+        String query =
+                "MATCH p=(email:Email {id:'6'})<-[:REPLY_TO*1..4]-()<-[:SENT]-(replier)\n" +
                 "RETURN replier.username AS replier, length(p) - 1 AS depth ORDER BY depth";
 
         Map<String, Object> params = new HashMap<String, Object>();
@@ -43,8 +43,8 @@ public class EmailQueries
 
     public ExecutionResult suspectBehaviour3()
     {
-        String query = "START email = node:email(id = '11')\n" +
-                "MATCH (email)<-[f:FORWARD_OF*]-() \n" +
+        String query =
+                "MATCH (email:Email {id:'11'})<-[f:FORWARD_OF*]-() \n" +
                 "RETURN count(f)";
 
         Map<String, Object> params = new HashMap<String, Object>();
@@ -54,9 +54,8 @@ public class EmailQueries
 
     public ExecutionResult lossyDb()
     {
-        String query = "START bob=node:user(username='Bob'), \n" +
-                "      charlie=node:user(username='Charlie')\n" +
-                "MATCH (bob)-[e:EMAILED]->(charlie)\n" +
+        String query =
+                "MATCH (bob:User {username:'Bob'})-[e:EMAILED]->(charlie:User {username:'Charlie'})\n" +
                 "RETURN e";
 
         Map<String, Object> params = new HashMap<String, Object>();

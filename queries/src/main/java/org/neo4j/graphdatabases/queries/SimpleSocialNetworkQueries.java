@@ -18,22 +18,22 @@ public class SimpleSocialNetworkQueries
 
     public ExecutionResult pathBetweenTwoFriends( String firstUser, String secondUser )
     {
-        String query = "START first=node:user({firstUserQuery}),\n" +
-                " second=node:user({secondUserQuery})\n" +
+        String query = "MATCH (first:User{name:{firstUser}}),\n" +
+                " (second:User{name:{secondUser}})\n" +
                 "MATCH p=shortestPath(first-[*..4]-second)\n" +
                 "RETURN length(p) AS depth";
 
         Map<String, Object> params = new HashMap<String, Object>();
-        params.put( "firstUserQuery", "name:" + firstUser );
-        params.put( "secondUserQuery", "name:" + secondUser );
+        params.put( "firstUser", firstUser );
+        params.put( "secondUser", secondUser );
 
         return executionEngine.execute( query, params );
     }
 
     public ExecutionResult friendOfAFriendToDepth4(String name)
     {
-        String query = "START person=node:user(name={name})\n" +
-            "MATCH (person)-[:FRIEND]-()-[:FRIEND]-()-[:FRIEND]-()-[:FRIEND]-(friend)\n" +
+        String query =
+            "MATCH (person:User {name:{name}})-[:FRIEND]-()-[:FRIEND]-()-[:FRIEND]-()-[:FRIEND]-(friend)\n" +
             "RETURN friend.name AS name";
 
         Map<String, Object> params = new HashMap<String, Object>();

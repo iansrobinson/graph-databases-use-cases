@@ -24,6 +24,7 @@ import org.neo4j.graphdatabases.queries.helpers.DbUtils;
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 
 import static org.neo4j.graphdatabases.performance_tests.testing.DoNothingWithTestResults.doNothing;
 import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResults.printResults;
@@ -130,46 +131,54 @@ public class SocialNetwork
     @Test
     public void friendOfAFriendWithInterest() throws Exception
     {
-        // when
-        multipleTestRuns.execute(
-                name.getMethodName(), createParams( "user", "topic1" ), take( NUMBER_OF_RESULTS ),
-                new SingleTest()
-                {
-                    @Override
-                    public String queryType()
+        try ( Transaction tx = db.beginTx() )
+        {
+            // when
+            multipleTestRuns.execute(
+                    name.getMethodName(), createParams( "user", "topic1" ), take( NUMBER_OF_RESULTS ),
+                    new SingleTest()
                     {
-                        return "Cypher";
-                    }
+                        @Override
+                        public String queryType()
+                        {
+                            return "Cypher";
+                        }
 
-                    @Override
-                    public Object execute( Map<String, String> params )
-                    {
-                        return queries.friendOfAFriendWithInterest( params.get( "user" ),
-                                params.get( "topic1" ), NUMBER_OF_RESULTS );
-                    }
-                } );
+                        @Override
+                        public Object execute( Map<String, String> params )
+                        {
+                            return queries.friendOfAFriendWithInterest( params.get( "user" ),
+                                    params.get( "topic1" ), NUMBER_OF_RESULTS );
+                        }
+                    } );
+            tx.success();
+        }
     }
 
     @Test
     public void friendOfAFriendWithInterestTraversalFramework() throws Exception
     {
-        // when
-        multipleTestRuns.execute( name.getMethodName(), createParams( "user", "topic1" ),
-                doNothing(), new SingleTest()
+        try ( Transaction tx = db.beginTx() )
         {
-            @Override
-            public String queryType()
+            // when
+            multipleTestRuns.execute( name.getMethodName(), createParams( "user", "topic1" ),
+                    doNothing(), new SingleTest()
             {
-                return "Traversal Framework";
-            }
+                @Override
+                public String queryType()
+                {
+                    return "Traversal Framework";
+                }
 
-            @Override
-            public Object execute( Map<String, String> params )
-            {
-                return queries.friendOfAFriendWithInterestTraversalFramework(
-                        params.get( "user" ), params.get( "topic1" ), NUMBER_OF_RESULTS );
-            }
-        } );
+                @Override
+                public Object execute( Map<String, String> params )
+                {
+                    return queries.friendOfAFriendWithInterestTraversalFramework(
+                            params.get( "user" ), params.get( "topic1" ), NUMBER_OF_RESULTS );
+                }
+            } );
+            tx.success();
+        }
     }
 
 
@@ -205,78 +214,82 @@ public class SocialNetwork
     @Test
     public void queryBakeoff() throws Exception
     {
-        // when
-        multipleTestRuns.execute( name.getMethodName(), createParams( "user", "topic1" ),
-                printResults( NUMBER_OF_RESULTS, resultFormatter(), writer ),
-                new SingleTest()
-                {
-                    @Override
-                    public String queryType()
+        try ( Transaction tx = db.beginTx() )
+        {
+            // when
+            multipleTestRuns.execute( name.getMethodName(), createParams( "user", "topic1" ),
+                    printResults( NUMBER_OF_RESULTS, resultFormatter(), writer ),
+                    new SingleTest()
                     {
-                        return "Traversal Framework";
-                    }
+                        @Override
+                        public String queryType()
+                        {
+                            return "Traversal Framework";
+                        }
 
-                    @Override
-                    public Object execute( Map<String, String> params )
-                    {
-                        return queries.friendOfAFriendWithInterestTraversalFramework(
-                                params.get( "user" ), params.get( "topic1" ), NUMBER_OF_RESULTS );
+                        @Override
+                        public Object execute( Map<String, String> params )
+                        {
+                            return queries.friendOfAFriendWithInterestTraversalFramework(
+                                    params.get( "user" ), params.get( "topic1" ), NUMBER_OF_RESULTS );
+                        }
                     }
-                }
-//                , new SingleTestRun()
-//                {
-//                    @Override
-//                    public QueryType queryType()
-//                    {
-//                        return QueryType.Gremlin;
-//                    }
-//
-//                    @Override
-//                    public Object execute( Map<String, String> params )
-//                    {
-//                        try
-//                        {
-//                            return queries.friendOfAFriendWithParticularInterestGremlin( params.get( "user" ),
-//                                    params.get( "topic" ) );
-//                        }
-//                        catch ( ScriptException e )
-//                        {
-//                            throw new RuntimeException( e );
-//                        }
-//                    }
-//                }
-                , new SingleTest()
-                {
-                    @Override
-                    public String queryType()
+    //                , new SingleTestRun()
+    //                {
+    //                    @Override
+    //                    public QueryType queryType()
+    //                    {
+    //                        return QueryType.Gremlin;
+    //                    }
+    //
+    //                    @Override
+    //                    public Object execute( Map<String, String> params )
+    //                    {
+    //                        try
+    //                        {
+    //                            return queries.friendOfAFriendWithParticularInterestGremlin( params.get( "user" ),
+    //                                    params.get( "topic" ) );
+    //                        }
+    //                        catch ( ScriptException e )
+    //                        {
+    //                            throw new RuntimeException( e );
+    //                        }
+    //                    }
+    //                }
+                    , new SingleTest()
                     {
-                        return "Cypher";
-                    }
+                        @Override
+                        public String queryType()
+                        {
+                            return "Cypher";
+                        }
 
-                    @Override
-                    public Object execute( Map<String, String> params )
-                    {
-                        return queries.friendOfAFriendWithInterest(
-                                params.get( "user" ), params.get( "topic1" ), NUMBER_OF_RESULTS );
+                        @Override
+                        public Object execute( Map<String, String> params )
+                        {
+                            return queries.friendOfAFriendWithInterest(
+                                    params.get( "user" ), params.get( "topic1" ), NUMBER_OF_RESULTS );
+                        }
                     }
-                }
-                , new SingleTest()
-                {
-                    @Override
-                    public String queryType()
+                    , new SingleTest()
                     {
-                        return "Cypher2";
-                    }
+                        @Override
+                        public String queryType()
+                        {
+                            return "Cypher2";
+                        }
 
-                    @Override
-                    public Object execute( Map<String, String> params )
-                    {
-                        return queries.friendWorkedWithFriendWithInterests(
-                                params.get( "user" ), NUMBER_OF_RESULTS,
-                                params.get( "topic1" ) );
+                        @Override
+                        public Object execute( Map<String, String> params )
+                        {
+                            return queries.friendWorkedWithFriendWithInterests(
+                                    params.get( "user" ), NUMBER_OF_RESULTS,
+                                    params.get( "topic1" ) );
+                        }
                     }
-                }
-        );
+            );
+            tx.success();
+        }
     }
 
     @Test
@@ -371,28 +384,28 @@ public class SocialNetwork
                 {
                     if ( key.equals( "user" ) )
                     {
-                        params.put( "user", String.format( "user-%s",
+                        params.put( "user", String.format( "User-%s",
                                 random.nextInt( SocialNetworkConfig.NUMBER_USERS ) + 1 ) );
                     }
                     if ( key.equals( "topic1" ) )
                     {
-                        params.put( "topic1", String.format( "topic-%s", topicIds.get( 0 ) ) );
+                        params.put( "topic1", String.format( "Topic-%s", topicIds.get( 0 ) ) );
                     }
                     if ( key.equals( "topic2" ) )
                     {
-                        params.put( "topic2", String.format( "topic-%s", topicIds.get( 1 ) ) );
+                        params.put( "topic2", String.format( "Topic-%s", topicIds.get( 1 ) ) );
                     }
                     if ( key.equals( "topic3" ) )
                     {
-                        params.put( "topic3", String.format( "topic-%s", topicIds.get( 2 ) ) );
+                        params.put( "topic3", String.format( "Topic-%s", topicIds.get( 2 ) ) );
                     }
                     if ( key.equals( "topic4" ) )
                     {
-                        params.put( "topic4", String.format( "topic-%s", topicIds.get( 3 ) ) );
+                        params.put( "topic4", String.format( "Topic-%s", topicIds.get( 3 ) ) );
                     }
                     if ( key.equals( "topic5" ) )
                     {
-                        params.put( "topic5", String.format( "topic-%s", topicIds.get( 4 ) ) );
+                        params.put( "topic5", String.format( "Topic-%s", topicIds.get( 4 ) ) );
                     }
                 }
 
@@ -425,13 +438,13 @@ public class SocialNetwork
     public void testSingleCypherQuery() throws Exception
     {
         Map<String, Object> params = new HashMap<String, Object>();
-        params.put( "person", "name:" + "user-309491" );
-        params.put( "colleague", "name:" + "user-558252" );
-        params.put( "topic", "name:" + "topic-78" );
+        params.put( "person", "User-309491" );
+        params.put( "colleague", "User-558252" );
+        params.put( "topic",  "Topic-78" );
 
 
-        String cypher = "START person=node:user({person}), colleague=node:user({colleague}), " +
-                "topic=node:topic({topic})\n" +
+        String cypher = "MATCH (person:User {name:{person}}), (colleague:User {name:{colleague}}), " +
+                "(topic:Topic {name:{topic}})\n" +
                 "MATCH p = person-[:WORKED_ON*2..4]-colleague-[:INTERESTED_IN]->topic\n" +
                 "RETURN p, LENGTH(p) AS pathLength ORDER BY pathLength ASC";
 
@@ -447,8 +460,8 @@ public class SocialNetwork
     public void testTraversal() throws Exception
     {
         Collection<Node> nodes = queries.friendOfAFriendWithInterestTraversalFramework(
-                "user-309491",
-                "topic-78", NUMBER_OF_RESULTS );
+                "User-309491",
+                "Topic-78", NUMBER_OF_RESULTS );
 
 
         for ( Node node : nodes )
