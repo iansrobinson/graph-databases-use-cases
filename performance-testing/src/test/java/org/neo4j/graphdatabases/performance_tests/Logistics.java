@@ -23,7 +23,11 @@ import org.neo4j.graphdatabases.performance_tests.testing.SysOutWriter;
 import org.neo4j.graphdatabases.queries.LogisticsQueries;
 import org.neo4j.graphdatabases.queries.helpers.DbUtils;
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
+import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.helpers.collection.IteratorUtil;
+import org.neo4j.tooling.GlobalGraphOperations;
 
 import static java.util.Arrays.asList;
 
@@ -55,7 +59,10 @@ public class Logistics
     @AfterClass
     public static void teardown()
     {
-        db.shutdown();
+        if ( db != null )
+        {
+            db.shutdown();
+        }
     }
 
 
@@ -73,21 +80,20 @@ public class Logistics
 
     private void getPath( List<Integer> ids, Interval interval )
     {
-        StringBuilder sbStart = new StringBuilder();
+        StringBuilder sbWhere = new StringBuilder();
         StringBuilder sbMatch = new StringBuilder();
 
         for ( int i = 0; i < ids.size(); i++ )
         {
-            sbStart.append( "n" );
-            sbStart.append( i );
-            sbStart.append( "=node(" );
-            sbStart.append( ids.get( i ) );
-            sbStart.append( ")" );
+            sbWhere.append("id(n");
+            sbWhere.append(i);
+            sbWhere.append(")=");
+            sbWhere.append(ids.get(i));
             if ( i < (ids.size() - 1) )
             {
-                sbStart.append( "," );
+                sbWhere.append(" AND ");
             }
-            sbStart.append( " " );
+            sbWhere.append(" ");
 
             sbMatch.append( "n" );
             sbMatch.append( i );
@@ -97,19 +103,19 @@ public class Logistics
             }
         }
 
-        String q = String.format( "start %s " +
-                "match p = %s " +
-                "where ALL(r in relationships(p) where r.start_date <= %s and r.end_date >= %s)" +
-                "return REDUCE(weight=0, r in relationships(p) : weight+r.cost) AS score, p",
-                sbStart.toString(),
+        String q = String.format(
+                "MATCH p = %s %n" +
+                "WHERE %s AND ALL(r in relationships(p) where r.start_date <= %s and r.end_date >= %s) %n" +
+                "RETURN REDUCE(weight=0, r in relationships(p) | weight+r.cost) AS score, p",
                 sbMatch.toString(),
+                sbWhere.toString(),
                 interval.getStartMillis(),
-                interval.getEndMillis() );
-        writer.writeln( q );
+                interval.getEndMillis());
+        writer.writeln(q);
 
 
         ExecutionResult result = new ExecutionEngine( db ).execute( q );
-        writer.writeln( result.toString() );
+        writer.writeln(result.toString());
     }
 
     @After
@@ -194,11 +200,16 @@ public class Logistics
 
         public TestRunParams( GraphDatabaseService db, TestOutputWriter writer )
         {
-            deliveryAreaCount = db.index().forNodes( "delivery-area" ).query( "name:*" ).size();
-            deliverySegmentCount = db.index().forNodes( "delivery-segment" ).query( "name:*" ).size();
+            GlobalGraphOperations ops = GlobalGraphOperations.at(db);
+            try ( Transaction tx = db.beginTx())
+            {
+                deliveryAreaCount = IteratorUtil.count(ops.getAllNodesWithLabel(DynamicLabel.label("DeliveryArea")));
+                deliverySegmentCount = IteratorUtil.count(ops.getAllNodesWithLabel(DynamicLabel.label("DeliverySegment")));
 
-            writer.writeln( "deliveryAreaCount " + deliveryAreaCount );
-            writer.writeln( "deliverySegmentCount " + deliverySegmentCount );
+                writer.writeln( "deliveryAreaCount " + deliveryAreaCount );
+                writer.writeln( "deliverySegmentCount " + deliverySegmentCount );
+                tx.success();
+            }
         }
 
         public ParamsGenerator createParams()
@@ -212,15 +223,15 @@ public class Logistics
                     if ( random.nextInt( 2 ) < 1 )
                     {
                         params.put( "start",
-                                String.format( "delivery-segment-%s", random.nextInt( deliverySegmentCount ) + 1 ) );
+                                String.format( "DeliverySegment-%s", random.nextInt( deliverySegmentCount ) + 1 ) );
                     }
                     else
                     {
                         params.put( "start",
-                                String.format( "delivery-area-%s", random.nextInt( deliveryAreaCount ) + 1 ) );
+                                String.format( "DeliveryArea-%s", random.nextInt( deliveryAreaCount ) + 1 ) );
                     }
                     params.put( "end",
-                            String.format( "delivery-segment-%s", random.nextInt( deliverySegmentCount ) + 1 ) );
+                            String.format( "DeliverySegment-%s", random.nextInt( deliverySegmentCount ) + 1 ) );
                     DateTime startDtm = LogisticsConfig.START_DATE.plusDays( random.nextInt( 6 ) );
                     params.put( "interval", new Interval( startDtm, startDtm.plusDays( 1 ) ).toString() );
                     return params;

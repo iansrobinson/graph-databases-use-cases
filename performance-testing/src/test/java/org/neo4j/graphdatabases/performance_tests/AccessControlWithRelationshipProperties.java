@@ -48,8 +48,8 @@ public class AccessControlWithRelationshipProperties
 
         random = new Random();
 
-        numberOfAccounts = DbUtils.numberOfItemsInIndex( db, "account", "name" );
-        numberOfCustomers = DbUtils.numberOfItemsInIndex( db, "employee", "name" );
+        numberOfAccounts = DbUtils.numberOfItemsWithLabel(db, "Account");
+        numberOfCustomers = DbUtils.numberOfItemsWithLabel(db, "Employee");
 
     }
 
@@ -249,17 +249,17 @@ public class AccessControlWithRelationshipProperties
             {
                 HashMap<String, String> params = new HashMap<String, String>();
 
-                String adminName = String.format( "administrator-%s",
+                String adminName = String.format( "Administrator-%s",
                         random.nextInt( AccessControlWithRelationshipPropertiesConfig.NUMBER_OF_ADMINS ) + 1 );
 
                 String resourceName;
                 if ( random.nextInt( 2 ) < 1 )
                 {
-                    resourceName = String.format( "account-%s", random.nextInt( numberOfAccounts ) + 1 );
+                    resourceName = String.format( "Account-%s", random.nextInt( numberOfAccounts ) + 1 );
                 }
                 else
                 {
-                    resourceName = String.format( "customer-%s", random.nextInt( numberOfCustomers ) + 1 );
+                    resourceName = String.format( "Customer-%s", random.nextInt( numberOfCustomers ) + 1 );
                 }
 
                 QueryUnionExecutionResult result = queries.findAccessibleCompanies( adminName );

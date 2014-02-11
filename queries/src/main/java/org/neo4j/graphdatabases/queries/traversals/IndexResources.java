@@ -3,14 +3,12 @@ package org.neo4j.graphdatabases.queries.traversals;
 import static org.neo4j.graphdb.DynamicRelationshipType.withName;
 
 import org.neo4j.graphdatabases.queries.helpers.IndexNodeByOtherNodeIndexer;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.Traversal;
+import org.neo4j.tooling.GlobalGraphOperations;
 
 public class IndexResources
 {
@@ -44,7 +42,7 @@ public class IndexResources
             @Override
             public Iterable<Node> execute( Node startNode )
             {
-                return db.index().forNodes( "company" ).query( "name:*" );
+                return GlobalGraphOperations.at(db).getAllNodesWithLabel(DynamicLabel.label("company"));
             }
         };
 

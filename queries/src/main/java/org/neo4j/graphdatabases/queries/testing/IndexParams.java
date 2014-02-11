@@ -1,9 +1,12 @@
 package org.neo4j.graphdatabases.queries.testing;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import java.util.List;
 
+import org.neo4j.cypher.javacompat.ExecutionEngine;
+import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -18,31 +21,15 @@ public class IndexParams
         indexParams = asList( params );
     }
 
-    public void index( GraphDatabaseService db )
+    public void index(GraphDatabaseService db)
     {
-        Transaction tx = db.beginTx();
-        try
-        {
-            Iterable<Node> allNodes = GlobalGraphOperations.at( db ).getAllNodes();
-            for ( Node node : allNodes )
-            {
-                if ( node.hasProperty( "_label" ) )
-                {
-                    String nodeLabel = node.getProperty( "_label" ).toString();
-                    for ( IndexParam indexParam : indexParams )
-                    {
-                        if (indexParam.nodeLabel().equals( nodeLabel ))
-                        {
-                            indexParam.indexNode( node, db );
-                        }
-                    }
-                }
+        try (Transaction tx = db.beginTx()) {
+            for (IndexParam indexParam : indexParams) {
+                db.schema().indexFor(DynamicLabel.label(indexParam.nodeLabel())).on(indexParam.propertyName()).create();
+//                db.schema().constraintFor(DynamicLabel.label(indexParam.nodeLabel())).assertPropertyIsUnique(indexParam.propertyName()).create();
+//                engine.execute(format("CREATE INDEX ON :%s(%s)", indexParam.nodeLabel(), indexParam.propertyName()));
             }
             tx.success();
-        }
-        finally
-        {
-            tx.finish();
         }
 
     }

@@ -4,9 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.tooling.GlobalGraphOperations;
 
@@ -21,13 +19,22 @@ public class DbUtils
                 .setConfig( DbUtils.dbConfig() )
                 .newGraphDatabase();
 
-        if ( count( GlobalGraphOperations.at( db ).getAllRelationshipTypes().iterator() ) == 0 )
+        if ( countRelTypes(db) == 0 )
         {
             throw new IllegalStateException( "Performance dataset does not exist. See the Readme for instructions on " +
                     "generating a sample dataset." );
         }
 
         return db;
+    }
+
+    public static int countRelTypes(GraphDatabaseService db) {
+        try ( Transaction tx = db.beginTx() )
+        {
+            int count = count(GlobalGraphOperations.at(db).getAllRelationshipTypes());
+            tx.success();
+            return count;
+        }
     }
 
     public static Map<String, String> dbConfig()
@@ -44,25 +51,34 @@ public class DbUtils
     {
         writer.writeln( "BEGIN: Warming cache" );
 
-        for ( Relationship r : GlobalGraphOperations.at( db ).getAllRelationships() )
+        try ( Transaction tx = db.beginTx() )
         {
-            r.getPropertyKeys();
-            r.getStartNode();
-        }
-        for ( Node n : GlobalGraphOperations.at( db ).getAllNodes() )
-        {
-            n.getPropertyKeys();
-            for ( Relationship relationship : n.getRelationships() )
+            for ( Relationship r : GlobalGraphOperations.at( db ).getAllRelationships() )
             {
-                relationship.getStartNode();
+                r.getPropertyKeys();
+                r.getStartNode();
             }
+            for ( Node n : GlobalGraphOperations.at( db ).getAllNodes() )
+            {
+                n.getPropertyKeys();
+                for ( Relationship relationship : n.getRelationships() )
+                {
+                    relationship.getStartNode();
+                }
+            }
+            tx.success();
         }
-
         writer.writeln( "\nEND  : Warming cache\n" );
     }
 
-    public static int numberOfItemsInIndex( GraphDatabaseService db, String indexName, String propertyName )
+    public static int numberOfItemsWithLabel(GraphDatabaseService db, String labelName)
     {
-        return db.index().forNodes( indexName ).query( propertyName, "*" ).size();
+        try ( Transaction tx = db.beginTx() )
+        {
+            GlobalGraphOperations ops = GlobalGraphOperations.at(db);
+            int count = count(ops.getAllNodesWithLabel(DynamicLabel.label(labelName)));
+            tx.success();
+            return count;
+        }
     }
 }

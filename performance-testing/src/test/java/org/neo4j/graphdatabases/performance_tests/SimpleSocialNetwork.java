@@ -20,6 +20,7 @@ import org.neo4j.graphdatabases.queries.testing.TestOutputWriter;
 import org.neo4j.graphdatabases.queries.traversals.FriendOfAFriendDepth4;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 
 import static org.neo4j.graphdatabases.performance_tests.testing.PrintTestResults.printResults;
 
@@ -53,68 +54,78 @@ public class SimpleSocialNetwork
     @Test
     public void foafToDepthFour() throws Exception
     {
-        // when
-        multipleTestRuns.execute( "Foaf to depth 4", createParams(), printResults( 1, writer ), new SingleTest()
+        try ( Transaction tx = db.beginTx() )
         {
-            @Override
-            public String queryType()
+            // when
+            multipleTestRuns.execute( "Foaf to depth 4", createParams(), printResults( 1, writer ), new SingleTest()
             {
-                return "Cypher";
-            }
+                @Override
+                public String queryType()
+                {
+                    return "Cypher";
+                }
 
-            @Override
-            public ExecutionResult execute( Map<String, String> params )
-            {
-                return queries.pathBetweenTwoFriends( params.get( "first-user" ), params.get( "second-user" ) );
-            }
-        } );
-
+                @Override
+                public ExecutionResult execute( Map<String, String> params )
+                {
+                    return queries.pathBetweenTwoFriends( params.get( "first-user" ), params.get( "second-user" ) );
+                }
+            } );
+            tx.success();
+        }
     }
 
     @Test
     public void friendOfAFriendToDepth4() throws Exception
     {
-        // when
-        multipleTestRuns.execute( "Friend of a friend to depth 4", createParams(), printResults( 100, writer ),
-                new SingleTest()
-                {
-                    @Override
-                    public String queryType()
+        try ( Transaction tx = db.beginTx() )
+        {
+            // when
+            multipleTestRuns.execute( "Friend of a friend to depth 4", createParams(), printResults( 100, writer ),
+                    new SingleTest()
                     {
-                        return "Cypher";
-                    }
+                        @Override
+                        public String queryType()
+                        {
+                            return "Cypher";
+                        }
 
-                    @Override
-                    public ExecutionResult execute( Map<String, String> params )
-                    {
-                        return queries.friendOfAFriendToDepth4( params.get( "first-user" ) );
-                    }
-                } );
-
+                        @Override
+                        public ExecutionResult execute( Map<String, String> params )
+                        {
+                            return queries.friendOfAFriendToDepth4( params.get( "first-user" ) );
+                        }
+                    } );
+            tx.success();
+        }
     }
 
     @Test
     public void onlyFriendsAtDepth4UsingTraversalFramework() throws Exception
     {
-        final FriendOfAFriendDepth4 traversal = new FriendOfAFriendDepth4( db );
+        try ( Transaction tx = db.beginTx() )
+        {
+            final FriendOfAFriendDepth4 traversal = new FriendOfAFriendDepth4( db );
 
-        // when
-        multipleTestRuns.execute( "Only friends at depth 4 using Traversal Framework", createParams(),
-                printResults( 300000, writer ),
-                new SingleTest()
-                {
-                    @Override
-                    public String queryType()
+            // when
+            multipleTestRuns.execute( "Only friends at depth 4 using Traversal Framework", createParams(),
+                    printResults( 300000, writer ),
+                    new SingleTest()
                     {
-                        return "Traversal Framework (custom class)";
-                    }
+                        @Override
+                        public String queryType()
+                        {
+                            return "Traversal Framework (custom class)";
+                        }
 
-                    @Override
-                    public Iterable<Node> execute( Map<String, String> params )
-                    {
-                        return traversal.getFriends( params.get( "first-user" ) );
-                    }
-                } );
+                        @Override
+                        public Iterable<Node> execute( Map<String, String> params )
+                        {
+                            return traversal.getFriends( params.get( "first-user" ) );
+                        }
+                    } );
+            tx.success();
+        }
     }
 
     private ParamsGenerator createParams()
@@ -125,10 +136,10 @@ public class SimpleSocialNetwork
             public Map<String, String> generateParams()
             {
                 Map<String, String> params = new HashMap<String, String>();
-                params.put( "first-user", String.format( "user-%s", random.nextInt( SimpleSocialNetworkConfig
+                params.put( "first-user", String.format( "User-%s", random.nextInt( SimpleSocialNetworkConfig
                         .NUMBER_USERS
                 ) + 1 ) );
-                params.put( "second-user", String.format( "user-%s", random.nextInt( SimpleSocialNetworkConfig
+                params.put( "second-user", String.format( "User-%s", random.nextInt( SimpleSocialNetworkConfig
                         .NUMBER_USERS
                 ) + 1 ) );
                 return params;

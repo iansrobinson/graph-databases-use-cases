@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -11,6 +12,7 @@ import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -22,7 +24,9 @@ import static org.neo4j.graphdatabases.queries.testing.IndexParam.indexParam;
 
 public class QueryUnionExecutionEngineTest
 {
+    private static final GraphDatabaseService database = createDatabase();
     private static ExecutionEngineWrapper executionEngine;
+    private static Transaction transaction;
 
     @BeforeClass
     public static void init()
@@ -31,7 +35,7 @@ public class QueryUnionExecutionEngineTest
         {
             executionEngine = new ExecutionEngineWrapper()
             {
-                private ExecutionEngine engine = new ExecutionEngine( createDatabase() );
+                private ExecutionEngine engine = new ExecutionEngine(database);
 
                 @Override
                 public ExecutionResult execute( String query, Map<String, Object> params )
@@ -50,14 +54,22 @@ public class QueryUnionExecutionEngineTest
         {
             System.out.println( e.getMessage() );
         }
+
+        transaction = database.beginTx();
+    }
+
+    @AfterClass
+    public static void end() {
+        transaction.close();
+        database.shutdown();
     }
 
     @Test
     public void shouldAllowIteratingSingleResult() throws Exception
     {
         // given
-        String query = "START a = node:user(name='a')\n" +
-                "MATCH a-[:FRIEND]->person\n" +
+        String query =
+                "MATCH (a:User {name:'a'})-[:FRIEND]->(person)\n" +
                 "RETURN person";
         QueryUnionExecutionEngine queryUnionExecutionEngine = new QueryUnionExecutionEngine( executionEngine );
 
@@ -74,11 +86,11 @@ public class QueryUnionExecutionEngineTest
     public void shouldAllowIteratingMultipleResults() throws Exception
     {
         // given
-        String query1 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:FRIEND]->person\n" +
+        String query1 =
+                "MATCH (a:User {name:'a'})-[:FRIEND]->(person)\n" +
                 "RETURN person";
-        String query2 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:ENEMY]->person\n" +
+        String query2 =
+                "MATCH (a:User {name:'a'})-[:ENEMY]->(person)\n" +
                 "RETURN person";
         QueryUnionExecutionEngine queryUnionExecutionEngine = new QueryUnionExecutionEngine( executionEngine );
 
@@ -97,11 +109,11 @@ public class QueryUnionExecutionEngineTest
     public void shouldReturnCorrectResultsWhenFirstQueryReturnsEmptyResults() throws Exception
     {
         // given
-        String query1 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:COLLEAGUE]->person\n" +
+        String query1 =
+                "MATCH (a:User {name:'a'})-[:COLLEAGUE]->(person)\n" +
                 "RETURN person";
-        String query2 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:ENEMY]->person\n" +
+        String query2 =
+                "MATCH (a:User {name:'a'})-[:ENEMY]->(person)\n" +
                 "RETURN person";
         QueryUnionExecutionEngine queryUnionExecutionEngine = new QueryUnionExecutionEngine( executionEngine );
 
@@ -118,11 +130,11 @@ public class QueryUnionExecutionEngineTest
     public void shouldReturnCorrectResultsWhenLastQueryReturnsEmptyResults() throws Exception
     {
         // given
-        String query1 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:FRIEND]->person\n" +
+        String query1 =
+                "MATCH (a:User {name:'a'})-[:FRIEND]->(person)\n" +
                 "RETURN person";
-        String query2 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:COLLEAGUE]->person\n" +
+        String query2 =
+                "MATCH (a:User {name:'a'})-[:COLLEAGUE]->(person)\n" +
                 "RETURN person";
         QueryUnionExecutionEngine queryUnionExecutionEngine = new QueryUnionExecutionEngine( executionEngine );
 
@@ -139,14 +151,14 @@ public class QueryUnionExecutionEngineTest
     public void shouldReturnCorrectResultsWhenMiddleQueryReturnsEmptyResults() throws Exception
     {
         // given
-        String query1 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:FRIEND]->person\n" +
+        String query1 =
+                "MATCH (a:User {name:'a'})-[:FRIEND]->(person)\n" +
                 "RETURN person";
-        String query2 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:COLLEAGUE]->person\n" +
+        String query2 =
+                "MATCH (a:User {name:'a'})-[:COLLEAGUE]->(person)\n" +
                 "RETURN person";
-        String query3 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:ENEMY]->person\n" +
+        String query3 =
+                "MATCH (a:User {name:'a'})-[:ENEMY]->(person)\n" +
                 "RETURN person";
         QueryUnionExecutionEngine queryUnionExecutionEngine = new QueryUnionExecutionEngine( executionEngine );
 
@@ -165,11 +177,11 @@ public class QueryUnionExecutionEngineTest
     public void shouldReturnCorrectResultsWhenAllQueriesReturnEmptyResults() throws Exception
     {
         // given
-        String query1 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:COLLEAGUE]->person\n" +
+        String query1 =
+                "MATCH (a:User {name:'a'})-[:COLLEAGUE]->(person)\n" +
                 "RETURN person";
-        String query2 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:COLLEAGUE]->person\n" +
+        String query2 =
+                "MATCH (a:User {name:'a'})-[:COLLEAGUE]->(person)\n" +
                 "RETURN person";
         QueryUnionExecutionEngine queryUnionExecutionEngine = new QueryUnionExecutionEngine( executionEngine );
 
@@ -184,11 +196,11 @@ public class QueryUnionExecutionEngineTest
     public void shouldAllowSameParametersToBePassedToAllQueries() throws Exception
     {
         // given
-        String query1 = "START a = node:user(name={name})\n" +
-                "MATCH a-[:FRIEND]->person\n" +
+        String query1 =
+                "MATCH (a:User {name:'a'})-[:FRIEND]->(person)\n" +
                 "RETURN person";
-        String query2 = "START a = node:user(name={name})\n" +
-                "MATCH a-[:ENEMY]->person\n" +
+        String query2 =
+                "MATCH (a:User {name:'a'})-[:ENEMY]->(person)\n" +
                 "RETURN person";
         QueryUnionExecutionEngine queryUnionExecutionEngine = new QueryUnionExecutionEngine( executionEngine );
 
@@ -210,11 +222,11 @@ public class QueryUnionExecutionEngineTest
     public void shouldAllowDifferentParametersToBePassedToDifferentQueries() throws Exception
     {
         // given
-        String query1 = "START a = node:user(name={name})\n" +
-                "MATCH a-[:FRIEND]->person\n" +
+        String query1 =
+                "MATCH (a:User {name:'a'})-[:FRIEND]->(person)\n" +
                 "RETURN person";
-        String query2 = "START a = node:user(name={user})\n" +
-                "MATCH a-[:ENEMY]->person\n" +
+        String query2 =
+                "MATCH (a:User {name:'a'})-[:ENEMY]->(person)\n" +
                 "RETURN person";
         QueryUnionExecutionEngine queryUnionExecutionEngine = new QueryUnionExecutionEngine( executionEngine );
 
@@ -255,11 +267,11 @@ public class QueryUnionExecutionEngineTest
     public void shouldReturnAllResultsAsString() throws Exception
     {
         // given
-        String query1 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:FRIEND]->person\n" +
+        String query1 =
+                "MATCH (a:User {name:'a'})-[:FRIEND]->(person)\n" +
                 "RETURN person.name";
-        String query2 = "START a = node:user(name='a')\n" +
-                "MATCH a-[:ENEMY]->person\n" +
+        String query2 =
+                "MATCH (a:User {name:'a'})-[:ENEMY]->(person)\n" +
                 "RETURN person.name";
         QueryUnionExecutionEngine queryUnionExecutionEngine = new QueryUnionExecutionEngine( executionEngine );
 
@@ -291,16 +303,16 @@ public class QueryUnionExecutionEngineTest
     private static GraphDatabaseService createDatabase()
     {
         String cypher = "CREATE\n" +
-                "(a {name:'a', _label:'user'}),\n" +
-                "(b {name:'b', _label:'user'}),\n" +
-                "(c {name:'c', _label:'user'}),\n" +
-                "(d {name:'d', _label:'user'}),\n" +
-                "(e {name:'e', _label:'user'}),\n" +
-                "a-[:FRIEND]->b, a-[:FRIEND]->c, a-[:ENEMY]->d, a-[:ENEMY]->e";
+                "(a:User {name:'a'}),\n" +
+                "(b:User {name:'b'}),\n" +
+                "(c:User {name:'c'}),\n" +
+                "(d:User {name:'d'}),\n" +
+                "(e:User {name:'e'}),\n" +
+                "(a)-[:FRIEND]->(b), (a)-[:FRIEND]->(c), (a)-[:ENEMY]->(d), (a)-[:ENEMY]->(e)";
 
         return createFromCypher(
                 "Union example",
                 cypher,
-                indexParam( "user", "name" ) );
+                indexParam( "User", "name" ) );
     }
 }

@@ -15,6 +15,7 @@ import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdatabases.queries.helpers.PrintingExecutionEngineWrapper;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 
 public class LogisticsQueriesTest
 {
@@ -27,6 +28,7 @@ public class LogisticsQueriesTest
     private static Interval interval1 = Interval.parse( "2012-10-15T00:00:00.000+01:00/2012-10-22T00:00:00.000+01:00" );
     private static Interval interval2 = Interval.parse( "2012-10-22T00:00:00.000+01:00/2012-10-29T00:00:00.000+01:00" );
     private static Interval interval3 = Interval.parse( "2012-10-29T00:00:00.000+01:00/2012-11-05T00:00:00.000+01:00" );
+    private Transaction tx;
 
 
     @Before
@@ -37,9 +39,11 @@ public class LogisticsQueriesTest
 
             db = createDatabase();
             queries = new LogisticsQueries( db, new PrintingExecutionEngineWrapper( db, "logistics", name ) );
+            tx = db.beginTx();
         }
         catch ( Exception e )
         {
+            e.printStackTrace();
             System.out.println( e.getMessage() );
         }
     }
@@ -47,6 +51,11 @@ public class LogisticsQueriesTest
     @After
     public void shutdown()
     {
+        if ( tx != null )
+        {
+            tx.success();
+            tx.close();
+        }
         db.shutdown();
     }
 
@@ -58,8 +67,8 @@ public class LogisticsQueriesTest
         Interval queryInterval = new Interval( startDtm, startDtm.plusDays( 1 ) );
 
         // when
-        Iterable<Node> results = queries.findShortestPathWithParcelRouteCalculator( "delivery-area-1",
-                "delivery-segment-3",
+        Iterable<Node> results = queries.findShortestPathWithParcelRouteCalculator( "DeliveryArea-1",
+                "DeliverySegment-3",
                 queryInterval );
 
 
@@ -67,14 +76,14 @@ public class LogisticsQueriesTest
         Iterator<Node> iterator = results.iterator();
 
 
-        assertEquals( "delivery-area-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-2", iterator.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-2", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-3", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-area-2", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-segment-3", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-2", iterator.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-2", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-3", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-2", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliverySegment-3", iterator.next().getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -87,8 +96,8 @@ public class LogisticsQueriesTest
         Interval queryInterval = new Interval( startDtm, startDtm.plusDays( 1 ) );
 
         // when
-        Iterable<Node> results = queries.findShortestPathWithParcelRouteCalculator( "delivery-area-1",
-                "delivery-segment-3",
+        Iterable<Node> results = queries.findShortestPathWithParcelRouteCalculator( "DeliveryArea-1",
+                "DeliverySegment-3",
                 queryInterval );
 
 
@@ -96,12 +105,12 @@ public class LogisticsQueriesTest
         Iterator<Node> iterator = results.iterator();
 
 
-        assertEquals( "delivery-area-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-2", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-3", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-area-2", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-segment-3", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-2", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-3", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-2", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliverySegment-3", iterator.next().getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -114,8 +123,8 @@ public class LogisticsQueriesTest
         Interval queryInterval = new Interval( startDtm, startDtm.plusDays( 1 ) );
 
         // when
-        Iterable<Node> results = queries.findShortestPathWithParcelRouteCalculator( "delivery-area-1",
-                "delivery-segment-3",
+        Iterable<Node> results = queries.findShortestPathWithParcelRouteCalculator( "DeliveryArea-1",
+                "DeliverySegment-3",
                 queryInterval );
 
 
@@ -123,12 +132,12 @@ public class LogisticsQueriesTest
         Iterator<Node> iterator = results.iterator();
 
 
-        assertEquals( "delivery-area-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-3", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-area-3", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-segment-3", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-3", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-3", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliverySegment-3", iterator.next().getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -141,8 +150,8 @@ public class LogisticsQueriesTest
         Interval queryInterval = new Interval( startDtm, startDtm.plusDays( 1 ) );
 
         // when
-        Iterable<Node> results = queries.findShortestPathWithSimpleParcelRouteCalculator( "delivery-area-1",
-                "delivery-segment-3",
+        Iterable<Node> results = queries.findShortestPathWithSimpleParcelRouteCalculator( "DeliveryArea-1",
+                "DeliverySegment-3",
                 queryInterval );
 
 
@@ -150,12 +159,12 @@ public class LogisticsQueriesTest
         Iterator<Node> iterator = results.iterator();
 
 
-        assertEquals( "delivery-area-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-3", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-area-3", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-segment-3", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-3", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-3", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliverySegment-3", iterator.next().getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -168,8 +177,8 @@ public class LogisticsQueriesTest
         Interval queryInterval = new Interval( startDtm, startDtm.plusDays( 1 ) );
 
         // when
-        Iterable<Node> results = queries.findShortestPathWithParcelRouteCalculator( "delivery-area-1",
-                "delivery-segment-8",
+        Iterable<Node> results = queries.findShortestPathWithParcelRouteCalculator( "DeliveryArea-1",
+                "DeliverySegment-8",
                 queryInterval );
 
 
@@ -177,12 +186,12 @@ public class LogisticsQueriesTest
         Iterator<Node> iterator = results.iterator();
 
 
-        assertEquals( "delivery-area-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-1", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-2", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-area-4", iterator.next().getProperty( "name" ) );
-        assertEquals( "delivery-segment-8", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-1", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-2", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-4", iterator.next().getProperty( "name" ) );
+        assertEquals( "DeliverySegment-8", iterator.next().getProperty( "name" ) );
 
         assertFalse( iterator.hasNext() );
     }
@@ -195,7 +204,7 @@ public class LogisticsQueriesTest
         Interval queryInterval = new Interval( startDtm, startDtm.plusDays( 1 ) );
 
         // when
-        ExecutionResult result = queries.findShortestPathWithCypherReduce( "delivery-area-1", "delivery-segment-3",
+        ExecutionResult result = queries.findShortestPathWithCypherReduce( "DeliveryArea-1", "DeliverySegment-3",
                 queryInterval );
 
 
@@ -204,14 +213,14 @@ public class LogisticsQueriesTest
         Iterator<Node> nodes = rows.next().iterator();
 
 
-        assertEquals( "delivery-area-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-2", nodes.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-2", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-3", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-area-2", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-segment-3", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-2", nodes.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-2", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-3", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-2", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliverySegment-3", nodes.next().getProperty( "name" ) );
 
         assertFalse( nodes.hasNext() );
     }
@@ -224,7 +233,7 @@ public class LogisticsQueriesTest
         Interval queryInterval = new Interval( startDtm, startDtm.plusDays( 1 ) );
 
         // when
-        ExecutionResult result = queries.findShortestPathWithCypherReduce( "delivery-area-1", "delivery-segment-3",
+        ExecutionResult result = queries.findShortestPathWithCypherReduce( "DeliveryArea-1", "DeliverySegment-3",
                 queryInterval );
 
 
@@ -232,12 +241,12 @@ public class LogisticsQueriesTest
         Iterator<Iterable<Node>> rows = result.columnAs( "n" );
         Iterator<Node> nodes = rows.next().iterator();
 
-        assertEquals( "delivery-area-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-2", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-3", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-area-2", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-segment-3", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-2", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-3", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-2", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliverySegment-3", nodes.next().getProperty( "name" ) );
 
         assertFalse( nodes.hasNext() );
     }
@@ -250,7 +259,7 @@ public class LogisticsQueriesTest
         Interval queryInterval = new Interval( startDtm, startDtm.plusDays( 1 ) );
 
         // when
-        ExecutionResult result = queries.findShortestPathWithCypherReduce( "delivery-area-1", "delivery-segment-3",
+        ExecutionResult result = queries.findShortestPathWithCypherReduce( "DeliveryArea-1", "DeliverySegment-3",
                 queryInterval );
 
 
@@ -258,12 +267,12 @@ public class LogisticsQueriesTest
         Iterator<Iterable<Node>> rows = result.columnAs( "n" );
         Iterator<Node> nodes = rows.next().iterator();
 
-        assertEquals( "delivery-area-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-3", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-area-3", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-segment-3", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-3", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-3", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliverySegment-3", nodes.next().getProperty( "name" ) );
 
         assertFalse( nodes.hasNext() );
     }
@@ -276,7 +285,7 @@ public class LogisticsQueriesTest
         Interval queryInterval = new Interval( startDtm, startDtm.plusDays( 1 ) );
 
         // when
-        ExecutionResult result = queries.findShortestPathWithCypherReduce( "delivery-area-1", "delivery-segment-8",
+        ExecutionResult result = queries.findShortestPathWithCypherReduce( "DeliveryArea-1", "DeliverySegment-8",
                 queryInterval );
 
 
@@ -284,12 +293,12 @@ public class LogisticsQueriesTest
         Iterator<Iterable<Node>> rows = result.columnAs( "n" );
         Iterator<Node> nodes = rows.next().iterator();
 
-        assertEquals( "delivery-area-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "parcel-centre-1", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-base-2", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-area-4", nodes.next().getProperty( "name" ) );
-        assertEquals( "delivery-segment-8", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "ParcelCentre-1", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryBase-2", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliveryArea-4", nodes.next().getProperty( "name" ) );
+        assertEquals( "DeliverySegment-8", nodes.next().getProperty( "name" ) );
 
 
         assertFalse( nodes.hasNext() );
@@ -298,26 +307,26 @@ public class LogisticsQueriesTest
     private static GraphDatabaseService createDatabase()
     {
         String cypher = "CREATE\n" +
-                "(pc1 {name:'parcel-centre-1', _label:'parcel-centre'}),\n" +
-                "(pc2 {name:'parcel-centre-2', _label:'parcel-centre'}),\n" +
+                "(pc1:ParcelCentre:Location {name:'ParcelCentre-1'}),\n" +
+                "(pc2:ParcelCentre:Location {name:'ParcelCentre-2'}),\n" +
 
-                "(db1 {name:'delivery-base-1', _label:'delivery-base'}),\n" +
-                "(db2 {name:'delivery-base-2', _label:'delivery-base'}),\n" +
-                "(db3 {name:'delivery-base-3', _label:'delivery-base'}),\n" +
+                "(db1:DeliveryBase:Location {name:'DeliveryBase-1'}),\n" +
+                "(db2:DeliveryBase:Location {name:'DeliveryBase-2'}),\n" +
+                "(db3:DeliveryBase:Location {name:'DeliveryBase-3'}),\n" +
 
-                "(da1 {name:'delivery-area-1', _label:'delivery-area'}),\n" +
-                "(da2 {name:'delivery-area-2', _label:'delivery-area'}),\n" +
-                "(da3 {name:'delivery-area-3', _label:'delivery-area'}),\n" +
-                "(da4 {name:'delivery-area-4', _label:'delivery-area'}),\n" +
+                "(da1:DeliveryArea:Location {name:'DeliveryArea-1'}),\n" +
+                "(da2:DeliveryArea:Location {name:'DeliveryArea-2'}),\n" +
+                "(da3:DeliveryArea:Location {name:'DeliveryArea-3'}),\n" +
+                "(da4:DeliveryArea:Location {name:'DeliveryArea-4'}),\n" +
 
-                "(ds1 {name:'delivery-segment-1', _label:'delivery-segment'}),\n" +
-                "(ds2 {name:'delivery-segment-2', _label:'delivery-segment'}),\n" +
-                "(ds3 {name:'delivery-segment-3', _label:'delivery-segment'}),\n" +
-                "(ds4 {name:'delivery-segment-4', _label:'delivery-segment'}),\n" +
-                "(ds5 {name:'delivery-segment-5', _label:'delivery-segment'}),\n" +
-                "(ds6 {name:'delivery-segment-6', _label:'delivery-segment'}),\n" +
-                "(ds7 {name:'delivery-segment-7', _label:'delivery-segment'}),\n" +
-                "(ds8 {name:'delivery-segment-8', _label:'delivery-segment'}),\n" +
+                "(ds1:DeliverySegment:Location {name:'DeliverySegment-1'}),\n" +
+                "(ds2:DeliverySegment:Location {name:'DeliverySegment-2'}),\n" +
+                "(ds3:DeliverySegment:Location {name:'DeliverySegment-3'}),\n" +
+                "(ds4:DeliverySegment:Location {name:'DeliverySegment-4'}),\n" +
+                "(ds5:DeliverySegment:Location {name:'DeliverySegment-5'}),\n" +
+                "(ds6:DeliverySegment:Location {name:'DeliverySegment-6'}),\n" +
+                "(ds7:DeliverySegment:Location {name:'DeliverySegment-7'}),\n" +
+                "(ds8:DeliverySegment:Location {name:'DeliverySegment-8'}),\n" +
 
                 "pc1-[:CONNECTED_TO {cost:3, " + intervalProperties( interval1 ) + "}]->db1,\n" +
                 "pc1-[:CONNECTED_TO {cost:3, " + intervalProperties( interval1 ) + "}]->db2,\n" +
@@ -383,10 +392,11 @@ public class LogisticsQueriesTest
         return createFromCypher(
                 "Logistics",
                 cypher,
-                indexParam( "parcel-centre", "location", "name" ),
-                indexParam( "delivery-base", "location", "name" ),
-                indexParam( "delivery-area", "location", "name" ),
-                indexParam( "delivery-segment", "location", "name" ) );
+                indexParam( "Location", "name" ),
+                indexParam( "ParcelCentre", "name" ),
+                indexParam( "DeliveryBase", "name" ),
+                indexParam( "DeliveryArea", "name" ),
+                indexParam( "DeliverySegment", "name" ) );
     }
 
     private static String intervalProperties( Interval interval )

@@ -9,22 +9,19 @@ import java.util.Map;
 
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdatabases.queries.helpers.ExecutionEngineWrapper;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
-import org.neo4j.kernel.Traversal;
-import org.neo4j.kernel.Uniqueness;
+import org.neo4j.graphdb.traversal.Uniqueness;
+import org.neo4j.helpers.collection.IteratorUtil;
 
 import static org.neo4j.graphdb.DynamicRelationshipType.withName;
 
 public class SocialNetworkQueries
 {
+    public static final Label USER = DynamicLabel.label("User");
+    public static final Label TOPIC = DynamicLabel.label("Topic");
     private final GraphDatabaseService db;
     private final ExecutionEngineWrapper executionEngineWrapper;
 
@@ -38,7 +35,7 @@ public class SocialNetworkQueries
     public ExecutionResult sharedInterestsSameCompany( String userName )
     {
         String query =
-                "START  subject=node:user(name={name})\n" +
+                "MATCH  (subject:User {name:{name}})\n" +
                         "MATCH  (subject)-[:WORKS_FOR]->(company)<-[:WORKS_FOR]-(person),\n" +
                         "       (subject)-[:INTERESTED_IN]->(interest)<-[:INTERESTED_IN]-(person)\n" +
                         "RETURN person.name AS name,\n" +
@@ -55,7 +52,7 @@ public class SocialNetworkQueries
     public ExecutionResult sharedInterestsAllCompanies( String userName, int limit )
     {
         String query =
-                "START  subject=node:user(name={name})\n" +
+                "MATCH  (subject:User {name:{name}})\n" +
                         "MATCH  (subject)-[:INTERESTED_IN]->(interest)<-[:INTERESTED_IN]-(person),\n" +
                         "       (person)-[:WORKS_FOR]->(company)\n" +
                         "RETURN person.name AS name,\n" +
@@ -73,7 +70,7 @@ public class SocialNetworkQueries
 
     public ExecutionResult sharedInterestsAlsoInterestedInTopic( String userName, String topicLabel )
     {
-        String query = "START person=node:user(name={name})\n" +
+        String query = "MATCH (person:User {name:{name}})\n" +
                 "MATCH (person)-[:INTERESTED_IN]->()<-[:INTERESTED_IN]-(colleague)-[:INTERESTED_IN]->(topic)\n" +
                 "WHERE topic.name={topic}\n" +
                 "WITH  colleague\n" +
@@ -92,7 +89,7 @@ public class SocialNetworkQueries
     public ExecutionResult friendOfAFriendWithInterest( String userName, String topicLabel, int limit )
     {
         String query =
-                "START subject=node:user(name={name})\n" +
+                "MATCH (subject:User {name:{name}})\n" +
                         "MATCH p=(subject)-[:WORKED_ON]->()-[:WORKED_ON*0..2]-()\n" +
                         "        <-[:WORKED_ON]-(person)-[:INTERESTED_IN]->(interest)\n" +
                         "WHERE person<>subject AND interest.name={topic}\n" +
@@ -115,13 +112,13 @@ public class SocialNetworkQueries
                                                                            final String topicLabel,
                                                                            int limit )
     {
-        Node user = db.index().forNodes( "user" ).get( "name", userName ).getSingle();
-        final Node topic = db.index().forNodes( "topic" ).get( "name", topicLabel ).getSingle();
+        Node user = IteratorUtil.single(db.findNodesByLabelAndProperty(USER, "name", userName));
+        final Node topic = IteratorUtil.single(db.findNodesByLabelAndProperty(TOPIC, "name", topicLabel));
 
         final RelationshipType interested_in = withName( "INTERESTED_IN" );
         final RelationshipType worked_on = withName( "WORKED_ON" );
 
-        TraversalDescription traversalDescription = Traversal.description()
+        TraversalDescription traversalDescription = db.traversalDescription()
                 .breadthFirst()
                 .uniqueness( Uniqueness.NODE_GLOBAL )
                 .relationships( worked_on )
@@ -189,11 +186,12 @@ public class SocialNetworkQueries
     public ExecutionResult friendOfAFriendWithMultipleInterest( String userName, int limit, String... interestLabels )
     {
         String query =
-                "START subject=node:user(name={name})\n" +
+                "MATCH (subject:User {name:{name}})\n" +
                         "MATCH p=(subject)-[:WORKED_ON]->()-[:WORKED_ON*0..2]-()\n" +
                         "        <-[:WORKED_ON]-(person)-[:INTERESTED_IN]->(interest)\n" +
                         "WHERE person<>subject AND interest.name IN {interests}\n" +
                         "WITH person, interest, min(length(p)) as pathLength\n" +
+                        "ORDER BY interest.name\n"+
                         "RETURN person.name AS name,\n" +
                         "       count(interest) AS score,\n" +
                         "       collect(interest.name) AS interests,\n" +
@@ -211,7 +209,7 @@ public class SocialNetworkQueries
 
     public ExecutionResult friendWorkedWithFriendWithInterests( String userName, int limit, String... interestLabels )
     {
-        String query = "START subject=node:user(name={name})\n" +
+        String query = "MATCH (subject:User {name:{name}})\n" +
                 "MATCH p=(subject)-[:WORKED_WITH*0..1]-()-[:WORKED_WITH]-(person)\n" +
                 "        -[:INTERESTED_IN]->(interest)\n" +
                 "WHERE person<>subject AND interest.name IN {interests}\n" +
@@ -248,10 +246,11 @@ public class SocialNetworkQueries
         return executionEngineWrapper.execute( query, params );
     }
 
+    // todo no result?
     public ExecutionResult createWorkedWithRelationships( String userName )
     {
 
-        String query = "START subject = node:user(name={name})\n" +
+        String query = "MATCH (subject:User {name:{name}})\n" +
                 "MATCH (subject)-[:WORKED_ON]->()<-[:WORKED_ON]-(person)\n" +
                 "WHERE NOT((subject)-[:WORKED_WITH]-(person))\n" +
                 "WITH DISTINCT subject, person\n" +
@@ -267,7 +266,7 @@ public class SocialNetworkQueries
 
     public ExecutionResult getAllUsers()
     {
-        String query = "START subject = node:user('name:*')\n" +
+        String query = "MATCH (subject:User)\n" +
                 "RETURN subject.name AS name";
 
         return executionEngineWrapper.execute( query, new HashMap<String, Object>() );

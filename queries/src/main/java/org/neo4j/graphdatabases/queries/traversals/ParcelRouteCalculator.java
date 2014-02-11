@@ -13,13 +13,7 @@ import org.neo4j.graphalgo.CostEvaluator;
 import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.neo4j.graphalgo.PathFinder;
 import org.neo4j.graphalgo.WeightedPath;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.PathExpander;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.traversal.BranchState;
 import org.neo4j.graphdb.traversal.Evaluation;
@@ -65,27 +59,32 @@ public class ParcelRouteCalculator
             } );
 
     private static final CostEvaluator<Double> COST_EVALUATOR = CommonEvaluators.doubleCostEvaluator( "cost" );
-
-    private final Index<Node> locationIndex;
+    public static final Label LOCATION = DynamicLabel.label("Location");
+    private GraphDatabaseService db;
 
     public ParcelRouteCalculator( GraphDatabaseService db )
     {
-        this.locationIndex = db.index().forNodes( "location" );
+        this.db = db;
     }
 
     public Iterable<Node> calculateRoute( String start, String end, Interval interval )
     {
-        TraversalDescription deliveryBaseFinder = createDeliveryBaseFinder( interval );
+        try ( Transaction tx = db.beginTx() )
+        {
+            TraversalDescription deliveryBaseFinder = createDeliveryBaseFinder( interval );
 
-        Path upLeg = findRouteToDeliveryBase( start, deliveryBaseFinder );
-        Path downLeg = findRouteToDeliveryBase( end, deliveryBaseFinder );
+            Path upLeg = findRouteToDeliveryBase( start, deliveryBaseFinder );
+            Path downLeg = findRouteToDeliveryBase( end, deliveryBaseFinder );
 
-        Path topRoute = findRouteBetweenDeliveryBases(
-                upLeg.endNode(),
-                downLeg.endNode(),
-                interval );
+            Path topRoute = findRouteBetweenDeliveryBases(
+                    upLeg.endNode(),
+                    downLeg.endNode(),
+                    interval );
 
-        return combineRoutes( upLeg, downLeg, topRoute );
+            Set<Node> routes = combineRoutes(upLeg, downLeg, topRoute);
+            tx.success();
+            return routes;
+        }
     }
 
     private TraversalDescription createDeliveryBaseFinder( Interval interval )
@@ -114,7 +113,7 @@ public class ParcelRouteCalculator
 
     private Path findRouteToDeliveryBase( String startPosition, TraversalDescription deliveryBaseFinder )
     {
-        Node startNode = locationIndex.get( "name", startPosition ).getSingle();
+        Node startNode = IteratorUtil.single(db.findNodesByLabelAndProperty(LOCATION, "name", startPosition));
         return deliveryBaseFinder.traverse( startNode ).iterator().next();
     }
 

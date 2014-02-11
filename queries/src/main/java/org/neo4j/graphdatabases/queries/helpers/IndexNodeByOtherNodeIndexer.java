@@ -1,8 +1,6 @@
 package org.neo4j.graphdatabases.queries.helpers;
 
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
 
 public class IndexNodeByOtherNodeIndexer
@@ -27,10 +25,11 @@ public class IndexNodeByOtherNodeIndexer
 
     public void execute( GraphDatabaseService db, Node startNode, int batchSize )
     {
-        Index<Node> nodeIndex = db.index().forNodes( indexName );
-        Iterable<Node> indexableNodes = findIndexableNodes.execute( startNode );
 
         Transaction tx = db.beginTx();
+
+        Label label = DynamicLabel.label(indexName);
+        Iterable<Node> indexableNodes = findIndexableNodes.execute( startNode );
         int currentBatchSize = 0;
 
         try
@@ -40,11 +39,12 @@ public class IndexNodeByOtherNodeIndexer
                 Iterable<Node> nodesToIndexBy = findOtherNodesForIndexableNode.execute( indexableNode );
                 for ( Node node : nodesToIndexBy )
                 {
-                    nodeIndex.add( indexableNode, indexKey, node.getProperty( nodeToIndexByPropertyName ) );
+                    indexableNode.addLabel(label);
+                    indexableNode.setProperty(indexKey, node.getProperty( nodeToIndexByPropertyName ) );
                     if ( currentBatchSize++ > batchSize )
                     {
                         tx.success();
-                        tx.finish();
+                        tx.close();
                         tx = db.beginTx();
                         currentBatchSize = 0;
                     }
@@ -54,7 +54,7 @@ public class IndexNodeByOtherNodeIndexer
         }
         finally
         {
-            tx.finish();
+            tx.close();
         }
 
     }
